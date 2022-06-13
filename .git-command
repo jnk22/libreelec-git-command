@@ -1,0 +1,5 @@
+GIT_DOCKER_ID=
+
+function git () {
+    (docker run -ti --rm -v ${HOME}:/root -v $(pwd):/git ${GIT_DOCKER_ID} "$@")
+}
