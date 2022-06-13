@@ -17,4 +17,4 @@ curl -sSL https://raw.githubusercontent.com/jnk22/libreelec-git-command/main/ins
 
 You can now use the command `git` in your terminal!
 
-*This has only been tested with **LibreELEC 10.0.2** (Kodi 19.4) on a Raspberry Pi 3.*
+*This has been tested with **LibreELEC 10.0.2** (Kodi 19.4) on a Raspberry Pi 3 and Intel NUC7JYB.*
