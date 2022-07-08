@@ -1,4 +1,4 @@
-FROM arm32v7/alpine
+FROM alpine
 LABEL maintainer="Jannik Schäfer"
 
 RUN apk --update add git openssh && \
