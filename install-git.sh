@@ -111,9 +111,9 @@ download_required_files() {
 
 	mkdir -p "$TMP_INSTALL_DIR"
 	cd "$TMP_INSTALL_DIR" || failed_abort "Could not cd into $TMP_INSTALL_DIR."
-	wget -q -O REPO_FILE_NAME.zip "$REPO_FILE_URL"
-	unzip -oq REPO_FILE_NAME.zip
-	cd REPO_FILE_NAME || failed_abort "Could not cd into $REPO_FILE_NAME."
+	wget -q -O "$REPO_FILE_NAME.zip" "$REPO_FILE_URL"
+	unzip -oq "$REPO_FILE_NAME.zip"
+	cd "$REPO_FILE_NAME" || failed_abort "Could not cd into $REPO_FILE_NAME."
 }
 
 #######################################
