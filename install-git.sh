@@ -20,8 +20,9 @@ readonly DOCKER_INSTALL_TIMEOUT=30
 #   err_msg
 #######################################
 failed_abort() {
-	local err_msg=$1
-	echo "INSTALLATION FAILED: $err_msg"
+	local error_msg=$1
+
+	echo "INSTALLATION FAILED: $error_msg"
 	exit 1
 }
 
@@ -33,6 +34,8 @@ failed_abort() {
 #   None
 #######################################
 check_system_supported() {
+	echo "Verify that system is supported..."
+
 	if [[ $(grep ^NAME /etc/os-release | cut -d '=' -f 2 | sed "s/\"//g") != "LibreELEC" ]]; then
 		failed_abort "This script only supports LibreELEC."
 	fi
@@ -46,7 +49,8 @@ check_system_supported() {
 #   None
 #######################################
 check_docker_addon_installed() {
-	echo "Verify Docker service addon installation..."
+	echo "Verify docker service addon installation..."
+
 	if [ ! -d "$KODI_DOCKER_ADDON_PATH" ]; then
 		fail
 		return
@@ -63,7 +67,7 @@ check_docker_addon_installed() {
 #   None
 #######################################
 install_docker_addon() {
-	echo "Installing Docker service addon now..."
+	echo "Installing docker service addon now..."
 
 	kodi-send --action="InstallAddon(\"$KODI_DOCKER_ADDON_NAME\")" &>/dev/null
 	kodi-send --action "Action(\"Left\")" &>/dev/null
@@ -76,7 +80,22 @@ install_docker_addon() {
 	done
 
 	if [ ! -f "$DOCKER_BIN_PATH" ]; then
-		failed_abort "Docker addon installation failed. Please manually install the docker addon."
+		failed_abort "docker addon installation failed. Please manually install the docker addon."
+	fi
+}
+
+#######################################
+# Verify that docker command is available.
+# Globals:
+#   None
+# Arguments:
+#   None
+#######################################
+check_docker_command_available() {
+	echo "Verify that docker command is available..."
+
+	if ! command -v "$(DOCKER_BIN_PATH)" &>/dev/null; then
+		failed_abort "docker command is not available. Please re-install docker addon manually."
 	fi
 }
 
@@ -89,25 +108,12 @@ install_docker_addon() {
 #######################################
 download_required_files() {
 	echo "Download required files..."
+
 	mkdir -p "$TMP_INSTALL_DIR"
 	cd "$TMP_INSTALL_DIR" || failed_abort "Could not cd into $TMP_INSTALL_DIR."
 	wget -q -O REPO_FILE_NAME.zip "$REPO_FILE_URL"
 	unzip -oq REPO_FILE_NAME.zip
 	cd REPO_FILE_NAME || failed_abort "Could not cd into $REPO_FILE_NAME."
-}
-
-#######################################
-# Verify that docker command is available.
-# Globals:
-#   None
-# Arguments:
-#   None
-#######################################
-check_docker_command_available() {
-	echo "Verify that docker command is available..."
-	if ! command -v "$(DOCKER_BIN_PATH)" &>/dev/null; then
-		failed_abort "Docker command is not available. Please re-install docker addon manually."
-	fi
 }
 
 #######################################
