@@ -10,7 +10,7 @@ readonly KODI_DOCKER_ADDON_PATH=~/.kodi/addons/$KODI_DOCKER_ADDON_NAME
 readonly DOCKER_BIN_PATH=/storage/.kodi/addons/service.system.docker/bin/docker
 readonly GIT_COMMAND_SOURCE=~/.git-command
 readonly TMP_INSTALL_DIR=/tmp/libreelec-git-command
-readonly DOCKER_INSTALL_TIMEOUT=30
+readonly DOCKER_INSTALL_TIMEOUT=60
 
 #######################################
 # Abort installation due to failure.
