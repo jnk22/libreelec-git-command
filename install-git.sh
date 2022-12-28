@@ -150,3 +150,5 @@ install_docker_image() {
 	sed -e "s/GIT_DOCKER_ID=/GIT_DOCKER_ID=$DOCKER_VOLUME_ID/" -- git-command-template >"$GIT_COMMAND_SOURCE"
 	grep -qxF "source $GIT_COMMAND_SOURCE" ~/.profile || echo "source $GIT_COMMAND_SOURCE" >>~/.profile
 }
+
+main
