@@ -9,8 +9,31 @@ readonly KODI_DOCKER_ADDON_NAME=service.system.docker
 readonly KODI_DOCKER_ADDON_PATH=~/.kodi/addons/$KODI_DOCKER_ADDON_NAME
 readonly DOCKER_BIN_PATH=/storage/.kodi/addons/service.system.docker/bin/docker
 readonly GIT_COMMAND_SOURCE=~/.git-command
-readonly TMP_INSTALL_DIR=/tmp/libreelec-git-command
 readonly DOCKER_INSTALL_TIMEOUT=60
+
+TMP_INSTALL_DIR="$(mktemp -d)"
+trap 'rm -rf -- "$TMP_INSTALL_DIR"' EXIT
+
+#######################################
+# Run main function.
+# Globals:
+#   None
+# Arguments:
+#   None
+#######################################
+main() {
+	# Run pre-checks that are required for building docker images.
+	check_system_supported
+	check_docker_addon_installed || install_docker_addon
+	check_docker_command_available
+
+	# Install actual docker image.
+	download_required_files
+	install_docker_image
+
+	echo "Installation finished!"
+	echo "Please run 'source ~/.profile' or reconnect once to use the git command."
+}
 
 #######################################
 # Abort installation due to failure.
@@ -109,11 +132,8 @@ check_docker_command_available() {
 download_required_files() {
 	echo "Download required files..."
 
-	mkdir -p "$TMP_INSTALL_DIR"
-	cd "$TMP_INSTALL_DIR" || failed_abort "Could not cd into $TMP_INSTALL_DIR."
-	wget -q -O "$REPO_FILE_NAME.zip" "$REPO_FILE_URL"
+	wget -q -O "$TMP_INSTALL_DIR/$REPO_FILE_NAME.zip" "$REPO_FILE_URL"
 	unzip -oq "$REPO_FILE_NAME.zip"
-	cd "$REPO_FILE_NAME" || failed_abort "Could not cd into $REPO_FILE_NAME."
 }
 
 #######################################
@@ -126,31 +146,7 @@ download_required_files() {
 #######################################
 install_docker_image() {
 	echo "Install git command..."
-	DOCKER_VOLUME_ID=$(docker build . | sed -e 's/^.*Successfully built //p')
+	DOCKER_VOLUME_ID=$(docker build "$TMP_INSTALL_DIR/$REPO_FILE_NAME" | sed -e 's/^.*Successfully built //p')
 	sed -e "s/GIT_DOCKER_ID=/GIT_DOCKER_ID=$DOCKER_VOLUME_ID/" -- git-command-template >"$GIT_COMMAND_SOURCE"
 	grep -qxF "source $GIT_COMMAND_SOURCE" ~/.profile || echo "source $GIT_COMMAND_SOURCE" >>~/.profile
 }
-
-#######################################
-# Clean up all files after installation.
-# Globals:
-#   TMP_INSTALL_DIR
-# Arguments:
-#   None
-#######################################
-post_cleanup_files() {
-	echo "Clean up temporary installation files..."
-	rm -rf "$TMP_INSTALL_DIR"
-}
-
-# Run pre-checks that are required for building docker images.
-check_system_supported
-check_docker_addon_installed || install_docker_addon
-check_docker_command_available
-
-# Install actual docker image.
-download_required_files
-install_docker_image
-post_cleanup_files
-
-echo "Installation finished! Please run 'source ~/.profile' or reconnect once to use the git command."
