@@ -68,7 +68,7 @@ failed_abort() {
 #   None
 #######################################
 check_system_supported() {
-	[[ $(grep ^NAME /etc/os-release | cut -d '=' -f 2 | sed "s/\"//g") != "LibreELEC" ]] ||
+	[[ $(grep ^NAME /etc/os-release | cut -d '=' -f 2 | sed "s/\"//g") == "LibreELEC" ]] ||
 		failed_abort "This script only supports LibreELEC."
 
 	# if [[ $(grep ^NAME /etc/os-release | cut -d '=' -f 2 | sed "s/\"//g") != "LibreELEC" ]]; then
