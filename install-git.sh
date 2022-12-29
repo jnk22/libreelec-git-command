@@ -70,10 +70,6 @@ failed_abort() {
 check_system_supported() {
 	[[ $(grep ^NAME /etc/os-release | cut -d '=' -f 2 | sed "s/\"//g") == "LibreELEC" ]] ||
 		failed_abort "This script only supports LibreELEC."
-
-	# if [[ $(grep ^NAME /etc/os-release | cut -d '=' -f 2 | sed "s/\"//g") != "LibreELEC" ]]; then
-	# 	failed_abort "This script only supports LibreELEC."
-	# fi
 }
 
 #######################################
@@ -99,10 +95,6 @@ check_docker_addon_installed() {
 check_docker_command_available() {
 	command -v "$DOCKER_BIN_PATH" &>/dev/null ||
 		failed_abort "'docker' command is not available. Please re-install docker addon manually."
-
-	# if ! command -v "$DOCKER_BIN_PATH" &>/dev/null; then
-	#   failed_abort "'docker' command is not available. Please re-install docker addon manually."
-	# fi
 }
 
 #######################################
@@ -160,7 +152,7 @@ install_docker_image() {
 	docker_volume_id=$(command "$DOCKER_BIN_PATH" build "$repo_dir" | sed -n -e 's/^.*Successfully built //p')
 
 	sed -e "s/GIT_DOCKER_ID=/GIT_DOCKER_ID=$docker_volume_id/" -- "$repo_dir/git-command-template" >"$GIT_COMMAND_PATH"
-	grep -qxF "source $GIT_COMMAND_PATH" "$PROFILE_PATH" || echo "source $GIT_COMMAND_PATH" >>"$PROFILE_PATH"
+	grep -qxF "source $GIT_COMMAND_PATH" "$PROFILE_PATH" &>/dev/null || echo "source $GIT_COMMAND_PATH" >>"$PROFILE_PATH"
 }
 
 main
