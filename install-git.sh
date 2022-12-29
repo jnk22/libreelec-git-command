@@ -1,34 +1,45 @@
 #!/usr/bin/env bash
 #
-# Auto installation script for installing git command to LibreELEC.set -euo pipefail
-set -euxo pipefail
+# Auto installation script for installing git command to LibreELEC.
+
+set -euo pipefail
 
 readonly REPO_FILE_URL=https://github.com/jnk22/libreelec-git-command/archive/refs/heads/main.zip
 readonly REPO_FILE_NAME=libreelec-git-command-main
 readonly KODI_DOCKER_ADDON_NAME=service.system.docker
 readonly KODI_DOCKER_ADDON_PATH=~/.kodi/addons/$KODI_DOCKER_ADDON_NAME
-readonly DOCKER_BIN_PATH=/storage/.kodi/addons/service.system.docker/bin/docker
-readonly GIT_COMMAND_SOURCE=~/.git-command
-readonly DOCKER_INSTALL_TIMEOUT=60
+readonly DOCKER_BIN_PATH=$KODI_DOCKER_ADDON_PATH/bin/docker
+readonly PROFILE_PATH=~/.profile
+readonly GIT_COMMAND_PATH=~/.git-command
+readonly DOCKER_INSTALL_TIMEOUT=120
 
-TMP_INSTALL_DIR="$(mktemp -d)"
-trap 'rm -rf -- "$TMP_INSTALL_DIR"' EXIT
+TMP_DIR="$(mktemp -d)"
+trap 'rm -rf -- "$TMP_DIR"' EXIT
 
 #######################################
 # Run main function.
 # Globals:
-#   None
+#   KODI_DOCKER_ADDON_NAME
 # Arguments:
 #   None
 #######################################
 main() {
-	# Run pre-checks that are required for building docker images.
+	echo "Verifying that system is supported..."
 	check_system_supported
-	check_docker_addon_installed || install_docker_addon
+
+	echo "Verifying that '$KODI_DOCKER_ADDON_NAME' is installed..."
+	if ! check_docker_addon_installed; then
+		echo "Installing addon now. This may take a while..."
+		install_docker_addon
+	fi
+
+	echo "Verifying that docker command is available..."
 	check_docker_command_available
 
-	# Install actual docker image.
+	echo "Downloading required files..."
 	download_required_files
+
+	echo "Building docker image and installing git command..."
 	install_docker_image
 
 	echo "Installation finished!"
@@ -40,7 +51,7 @@ main() {
 # Globals:
 #   None
 # Arguments:
-#   err_msg
+#   error_msg
 #######################################
 failed_abort() {
 	local error_msg=$1
@@ -50,18 +61,19 @@ failed_abort() {
 }
 
 #######################################
-# Verify that current system is supported (i.e. 'LibreELEC').
+# Verify that current system is supported.
 # Globals:
 #   None
 # Arguments:
 #   None
 #######################################
 check_system_supported() {
-	echo "Verify that system is supported..."
-
-	if [[ $(grep ^NAME /etc/os-release | cut -d '=' -f 2 | sed "s/\"//g") != "LibreELEC" ]]; then
+	[[ $(grep ^NAME /etc/os-release | cut -d '=' -f 2 | sed "s/\"//g") != "LibreELEC" ]] ||
 		failed_abort "This script only supports LibreELEC."
-	fi
+
+	# if [[ $(grep ^NAME /etc/os-release | cut -d '=' -f 2 | sed "s/\"//g") != "LibreELEC" ]]; then
+	# 	failed_abort "This script only supports LibreELEC."
+	# fi
 }
 
 #######################################
@@ -70,14 +82,27 @@ check_system_supported() {
 #   KODI_DOCKER_ADDON_PATH
 # Arguments:
 #   None
+# Returns:
+#   0 if docker addon is installed, 1 otherwise
 #######################################
 check_docker_addon_installed() {
-	echo "Verify docker service addon installation..."
+	[[ -d "$KODI_DOCKER_ADDON_PATH" ]] || return 1
+}
 
-	if [ ! -d "$KODI_DOCKER_ADDON_PATH" ]; then
-		fail
-		return
-	fi
+#######################################
+# Verify that docker command is available.
+# Globals:
+#   DOCKER_BIN_PATH
+# Arguments:
+#   None
+#######################################
+check_docker_command_available() {
+	command -v "$DOCKER_BIN_PATH" &>/dev/null ||
+		failed_abort "'docker' command is not available. Please re-install docker addon manually."
+
+	# if ! command -v "$DOCKER_BIN_PATH" &>/dev/null; then
+	#   failed_abort "'docker' command is not available. Please re-install docker addon manually."
+	# fi
 }
 
 #######################################
@@ -90,65 +115,52 @@ check_docker_addon_installed() {
 #   None
 #######################################
 install_docker_addon() {
-	echo "Installing docker service addon now..."
-
 	kodi-send --action="InstallAddon(\"$KODI_DOCKER_ADDON_NAME\")" &>/dev/null
-	kodi-send --action "Action(\"Left\")" &>/dev/null
-	kodi-send --action "Action(\"Select\")" &>/dev/null
+	kodi-send --action="Action(\"Left\")" &>/dev/null
+	kodi-send --action="Action(\"Select\")" &>/dev/null
 
 	timeout_counter=0
-	until [ -f "$DOCKER_BIN_PATH" ] || [ "$timeout_counter" -ge "$DOCKER_INSTALL_TIMEOUT" ]; do
+	until check_docker_addon_installed || [ "$timeout_counter" -ge "$DOCKER_INSTALL_TIMEOUT" ]; do
 		sleep 1
 		timeout_counter=$((timeout_counter + 1))
 	done
 
-	if [ ! -f "$DOCKER_BIN_PATH" ]; then
-		failed_abort "docker addon installation failed. Please manually install the docker addon."
-	fi
-}
-
-#######################################
-# Verify that docker command is available.
-# Globals:
-#   None
-# Arguments:
-#   None
-#######################################
-check_docker_command_available() {
-	echo "Verify that docker command is available..."
-
-	if ! command -v "$(DOCKER_BIN_PATH)" &>/dev/null; then
-		failed_abort "docker command is not available. Please re-install docker addon manually."
-	fi
+	check_docker_addon_installed ||
+		failed_abort "Could not install addon. Please install manually and try again."
 }
 
 #######################################
 # Download repository files and prepare for installation.
-#   TMP_INSTALL_DIR
+#   TMP_DIR
+#   REPO_FILE_NAME
 #   REPO_FILE_URL
 # Arguments:
 #   None
 #######################################
 download_required_files() {
-	echo "Download required files..."
+	local zip_file_path="$TMP_DIR/$REPO_FILE_NAME.zip"
 
-	wget -q -O "$TMP_INSTALL_DIR/$REPO_FILE_NAME.zip" "$REPO_FILE_URL"
-	unzip -oq "$REPO_FILE_NAME.zip"
+	wget -q -O "$zip_file_path" "$REPO_FILE_URL"
+	unzip -oq "$zip_file_path" -d "$TMP_DIR"
 }
 
 #######################################
-# Install docker image and make available as user command.
+# Install docker image and make git available as user command.
 # Globals:
-#   DOCKER_VOLUME_ID
-#   GIT_COMMAND_SOURCE
+#   TMP_DIR
+#   REPO_FILE_NAME
+#   GIT_COMMAND_PATH
+#   PROFILE_PATH
 # Arguments:
 #   None
 #######################################
 install_docker_image() {
-	echo "Install git command..."
-	DOCKER_VOLUME_ID=$(docker build "$TMP_INSTALL_DIR/$REPO_FILE_NAME" | sed -e 's/^.*Successfully built //p')
-	sed -e "s/GIT_DOCKER_ID=/GIT_DOCKER_ID=$DOCKER_VOLUME_ID/" -- git-command-template >"$GIT_COMMAND_SOURCE"
-	grep -qxF "source $GIT_COMMAND_SOURCE" ~/.profile || echo "source $GIT_COMMAND_SOURCE" >>~/.profile
+	local repo_dir="$TMP_DIR/$REPO_FILE_NAME"
+	local docker_volume_id
+	docker_volume_id=$(command "$DOCKER_BIN_PATH" build "$repo_dir" | sed -n -e 's/^.*Successfully built //p')
+
+	sed -e "s/GIT_DOCKER_ID=/GIT_DOCKER_ID=$docker_volume_id/" -- "$repo_dir/git-command-template" >"$GIT_COMMAND_PATH"
+	grep -qxF "source $GIT_COMMAND_PATH" "$PROFILE_PATH" || echo "source $GIT_COMMAND_PATH" >>"$PROFILE_PATH"
 }
 
 main
