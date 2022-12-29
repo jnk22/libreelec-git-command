@@ -4,5 +4,5 @@ GIT_DOCKER_ID=
 [[ ":$PATH:" != *":$DOCKER_BIN_PATH:"* ]] && PATH="$PATH:$DOCKER_BIN_PATH"
 
 git() {
-	(docker run -ti --rm -v "$HOME":/root -v "$PWD":/git "$GIT_DOCKER_ID" "$@")
+  (docker run -ti --rm -v "$HOME":/root -v "$PWD":/git "$GIT_DOCKER_ID" "$@")
 }

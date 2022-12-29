@@ -7,8 +7,7 @@ set -euo pipefail
 readonly REPO_FILE_URL=https://github.com/jnk22/libreelec-git-command/archive/refs/heads/main.zip
 readonly REPO_FILE_NAME=libreelec-git-command-main
 readonly KODI_DOCKER_ADDON_NAME=service.system.docker
-readonly KODI_DOCKER_ADDON_PATH=~/.kodi/addons/$KODI_DOCKER_ADDON_NAME
-readonly DOCKER_BIN_PATH=$KODI_DOCKER_ADDON_PATH/bin/docker
+readonly DOCKER_BIN_PATH=~/.kodi/addons/$KODI_DOCKER_ADDON_NAME/bin/docker
 readonly PROFILE_PATH=~/.profile
 readonly GIT_COMMAND_PATH=~/.git-command
 readonly DOCKER_INSTALL_TIMEOUT=120
@@ -25,16 +24,15 @@ trap 'rm -rf -- "$TMP_DIR"' EXIT
 #######################################
 main() {
 	echo "Verifying that system is supported..."
-	check_system_supported
-
-	echo "Verifying that '$KODI_DOCKER_ADDON_NAME' is installed..."
-	if ! check_docker_addon_installed; then
-		echo "Installing addon now. This may take a while..."
-		install_docker_addon
+	if ! check_system_supported; then
+		failed_abort "This script only supports LibreELEC."
 	fi
 
-	echo "Verifying that docker command is available..."
-	check_docker_command_available
+	echo "Verifying that '$KODI_DOCKER_ADDON_NAME' is installed and 'docker' command is available..."
+	if ! check_docker_command_available; then
+		echo "Addon not installed. Installing addon now. This may take a while..."
+		install_docker_addon
+	fi
 
 	echo "Downloading required files..."
 	download_required_files
@@ -66,23 +64,11 @@ failed_abort() {
 #   None
 # Arguments:
 #   None
+# Returns:
+#   0 if supported, 1 otherwise
 #######################################
 check_system_supported() {
-	[[ $(grep ^NAME /etc/os-release | cut -d '=' -f 2 | sed "s/\"//g") == "LibreELEC" ]] ||
-		failed_abort "This script only supports LibreELEC."
-}
-
-#######################################
-# Verify that docker addon is installed.
-# Globals:
-#   KODI_DOCKER_ADDON_PATH
-# Arguments:
-#   None
-# Returns:
-#   0 if docker addon is installed, 1 otherwise
-#######################################
-check_docker_addon_installed() {
-	[[ -d "$KODI_DOCKER_ADDON_PATH" ]] || return 1
+	[[ $(grep ^NAME /etc/os-release | cut -d '=' -f 2 | sed "s/\"//g") == "LibreELEC" ]] || return 1
 }
 
 #######################################
@@ -91,17 +77,17 @@ check_docker_addon_installed() {
 #   DOCKER_BIN_PATH
 # Arguments:
 #   None
+# Returns:
+#   0 if available, 1 otherwise
 #######################################
 check_docker_command_available() {
-	command -v "$DOCKER_BIN_PATH" &>/dev/null ||
-		failed_abort "'docker' command is not available. Please re-install docker addon manually."
+	command -v "$DOCKER_BIN_PATH" &>/dev/null || return 1
 }
 
 #######################################
 # Install docker addon using 'kodi-send'.
 # Globals:
 #   KODI_DOCKER_ADDON_NAME
-#   DOCKER_BIN_PATH
 #   DOCKER_INSTALL_TIMEOUT
 # Arguments:
 #   None
@@ -112,13 +98,13 @@ install_docker_addon() {
 	kodi-send --action="Action(\"Select\")" &>/dev/null
 
 	timeout_counter=0
-	until check_docker_addon_installed || [ "$timeout_counter" -ge "$DOCKER_INSTALL_TIMEOUT" ]; do
+	until (check_docker_command_available) || [ "$timeout_counter" -ge "$DOCKER_INSTALL_TIMEOUT" ]; do
 		sleep 1
 		timeout_counter=$((timeout_counter + 1))
 	done
 
-	check_docker_addon_installed ||
-		failed_abort "Could not install addon. Please install manually and try again."
+	check_docker_command_available ||
+		failed_abort "Could not install addon. Please install addon manually and try again."
 }
 
 #######################################
@@ -141,6 +127,7 @@ download_required_files() {
 # Globals:
 #   TMP_DIR
 #   REPO_FILE_NAME
+#   DOCKER_BIN_PATH
 #   GIT_COMMAND_PATH
 #   PROFILE_PATH
 # Arguments:

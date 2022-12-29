@@ -7,11 +7,11 @@ This solution is based on a forum post in the thread [Installation of git on Lib
 ## Installation
 
 The installation script requires the Kodi service addon **Docker** from *Team LibreELEC* to be installed on your Kodi system.
-If not installed, this script automatically tries to install the addon, but requires a manual confirmation.
+If not installed, this script automatically tries to install the addon.
 
-To install, run:
+Run 
 
-```shell
+```bash
 curl -sSL https://raw.githubusercontent.com/jnk22/libreelec-git-command/main/install-git.sh | bash
 ```
 
