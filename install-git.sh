@@ -136,7 +136,7 @@ download_required_files() {
 install_docker_image() {
   local repo_dir="$TMP_DIR/$REPO_FILE_NAME"
   local docker_volume_id
-  docker_volume_id=$(command "$DOCKER_BIN_PATH" build "$repo_dir" | sed -n -e 's/^.*Successfully built //p')
+  docker_volume_id=$("$DOCKER_BIN_PATH" build "$repo_dir" | sed -n -e 's/^.*Successfully built //p')
 
   sed -e "s/GIT_DOCKER_ID=/GIT_DOCKER_ID=$docker_volume_id/" -- "$repo_dir/git-command-template" >"$GIT_COMMAND_PATH"
   grep -qxF "source $GIT_COMMAND_PATH" "$PROFILE_PATH" &>/dev/null || echo "source $GIT_COMMAND_PATH" >>"$PROFILE_PATH"
