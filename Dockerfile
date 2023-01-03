@@ -1,7 +1,7 @@
 FROM alpine
 LABEL maintainer="Jannik Schäfer"
 
-RUN apk --no-cache --update add git openssh && \
+RUN apk --update add git openssh && \
 rm -rf /var/lib/apt/lists/* && \
 rm /var/cache/apk/*
 
