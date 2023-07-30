@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 #
-# Auto installation script for installing git command to LibreELEC.
+# Installation script for git on LibreELEC.
 
 set -euo pipefail
 
@@ -8,8 +8,9 @@ readonly REPO_FILE_URL=https://github.com/jnk22/libreelec-git-command/archive/re
 readonly REPO_FILE_NAME=libreelec-git-command-main
 readonly KODI_DOCKER_ADDON_NAME=service.system.docker
 readonly DOCKER_BIN_PATH=~/.kodi/addons/$KODI_DOCKER_ADDON_NAME/bin/docker
-readonly PROFILE_PATH=~/.profile
-readonly GIT_COMMAND_PATH=~/.git-command
+readonly INSTALL_PATH=~/.local/bin
+readonly GIT_TEMPLATE_NAME=git-command-template
+readonly GIT_BINARY_NAME=git
 readonly DOCKER_INSTALL_TIMEOUT=120
 
 TMP_DIR="$(mktemp -d)"
@@ -41,7 +42,7 @@ main() {
   install_docker_image
 
   echo "Installation finished!"
-  echo "Please run 'source ~/.profile' or reconnect once to use the git command."
+  echo "'.local/bin' must be added to PATH to use the git command."
 }
 
 #######################################
@@ -103,8 +104,7 @@ install_docker_addon() {
     timeout_counter=$((timeout_counter + 1))
   done
 
-  check_docker_command_available ||
-    failed_abort "Could not install addon. Please install addon manually and try again."
+  check_docker_command_available || failed_abort "Could not install addon. Please install addon manually and try again."
 }
 
 #######################################
@@ -128,8 +128,9 @@ download_required_files() {
 #   TMP_DIR
 #   REPO_FILE_NAME
 #   DOCKER_BIN_PATH
-#   GIT_COMMAND_PATH
-#   PROFILE_PATH
+#   INSTALL_PATH
+#   GIT_TEMPLATE_NAME
+#   GIT_BINARY_NAME
 # Arguments:
 #   None
 #######################################
@@ -138,8 +139,7 @@ install_docker_image() {
   local docker_volume_id
   docker_volume_id=$("$DOCKER_BIN_PATH" build "$repo_dir" | sed -n -e 's/^.*Successfully built //p')
 
-  sed -e "s/GIT_DOCKER_ID=/GIT_DOCKER_ID=$docker_volume_id/" -- "$repo_dir/git-command-template" >"$GIT_COMMAND_PATH"
-  grep -qxF "source $GIT_COMMAND_PATH" "$PROFILE_PATH" &>/dev/null || echo "source $GIT_COMMAND_PATH" >>"$PROFILE_PATH"
+  sed -e "s/GIT_DOCKER_ID=/GIT_DOCKER_ID=$docker_volume_id/" -- "$repo_dir/$GIT_TEMPLATE_NAME" >"$INSTALL_PATH/$GIT_BINARY_NAME"
 }
 
 main
