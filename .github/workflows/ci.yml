@@ -1,0 +1,20 @@
+---
+name: CI
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      # Use Hadolint action until it can be used in pre-commit.ci:
+      # https://github.com/hadolint/hadolint/issues/886
+      - uses: hadolint/hadolint-action@v3.1.0
