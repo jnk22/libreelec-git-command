@@ -191,8 +191,8 @@ install_git_command() {
 #   None
 #######################################
 update_profile() {
-  local export_local_bin_path_line="export PATH=\"\$HOME/.local/bin:\$PATH\""
-  grep -qxF "$export_local_bin_path_line" "$PROFILE_PATH" &>/dev/null || echo "$export_local_bin_path_line" >>"$PROFILE_PATH"
+  local local_bin_path_line="PATH=\"\$HOME/.local/bin:\$PATH\""
+  grep -qF "$local_bin_path_line" "$PROFILE_PATH" &>/dev/null || echo -e "\n$local_bin_path_line" >>"$PROFILE_PATH"
 }
 
 main
