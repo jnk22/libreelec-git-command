@@ -4,8 +4,8 @@
 
 set -euo pipefail
 
-readonly REPO_FILE_URL=https://github.com/jnk22/libreelec-git-command/archive/refs/heads/main.zip
-readonly REPO_FILE_NAME=libreelec-git-command-main
+readonly REPOSITORY=jnk22/libreelec-git-command
+readonly BRANCH_NAME=main
 readonly KODI_DOCKER_ADDON_NAME=service.system.docker
 readonly GIT_INSTALL_PATH=~/.local/bin
 readonly PROFILE_PATH=~/.profile
@@ -25,6 +25,8 @@ trap 'rm -rf -- "$TMP_DIR"' EXIT
 #   None
 #######################################
 main() {
+  # TODO: Check if 'git' command is already available.
+
   echo "Verifying that system is supported..."
   if ! check_system_supported; then
     failed_abort "This script only supports LibreELEC."
@@ -37,8 +39,8 @@ main() {
     install_docker_addon || failed_abort "Could not install docker addon. Please install manually and try again."
   fi
 
-  echo "Downloading required files..."
-  download_required_files
+  echo "Downloading installation resources..."
+  download_resources
 
   echo "Building docker container..."
   build_docker_container || failed_abort "Could not build git docker container."
@@ -125,17 +127,17 @@ install_docker_addon() {
 
 #######################################
 # Download repository files and prepare for installation.
+#   REPOSITORY
+#   BRANCH_NAME
 #   TMP_DIR
-#   REPO_FILE_NAME
-#   REPO_FILE_URL
 # Arguments:
 #   None
 #######################################
-download_required_files() {
-  local zip_file_path="$TMP_DIR/$REPO_FILE_NAME.zip"
+download_resources() {
+  local repo_link=https://github.com/$REPOSITORY/raw/$BRANCH_NAME
 
-  wget -q -O "$zip_file_path" "$REPO_FILE_URL"
-  unzip -oq "$zip_file_path" -d "$TMP_DIR"
+  wget -q -O "$TMP_DIR/Dockerfile" "$repo_link/Dockerfile"
+  wget -q -O "$TMP_DIR/git" "$repo_link/git"
 }
 
 #######################################
@@ -150,7 +152,7 @@ download_required_files() {
 #   0 if successful, 1 otherwise
 #######################################
 build_docker_container() {
-  docker build -t "$DOCKER_CONTAINER_NAME" "$TMP_DIR/$REPO_FILE_NAME" &>/dev/null || return 1
+  docker build -t "$DOCKER_CONTAINER_NAME" "$TMP_DIR/Dockerfile" &>/dev/null || return 1
 }
 
 #######################################
@@ -166,7 +168,7 @@ build_docker_container() {
 #######################################
 install_git_command() {
   mkdir -p "$GIT_INSTALL_PATH"
-  cp "$TMP_DIR/$REPO_FILE_NAME/git" "$GIT_INSTALL_PATH/git"
+  cp "$TMP_DIR/git" "$GIT_INSTALL_PATH/git"
 }
 
 #######################################
