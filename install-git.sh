@@ -103,8 +103,7 @@ install_docker_addon() {
     timeout_counter=$((timeout_counter + 1))
   done
 
-  check_docker_command_available ||
-    failed_abort "Could not install addon. Please install addon manually and try again."
+  check_docker_command_available || failed_abort "Could not install addon. Please install manually and try again."
 }
 
 #######################################
