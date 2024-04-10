@@ -1,5 +1,7 @@
 # LibreELEC Git Command
 
+[![pre-commit.ci status](https://results.pre-commit.ci/badge/github/jnk22/libreelec-git-command/main.svg)](https://results.pre-commit.ci/latest/github/jnk22/libreelec-git-command/main)
+
 This script makes it possible to use the command `git` on LibreELEC Kodi installations, where this is usually not possible.
 
 This solution is based on a forum post in the thread [Installation of git on Libreelec@LibreELEC Forum](https://forum.libreelec.tv/thread/13874-installation-of-git-on-libreelec/?postID=105152#post105152).
