@@ -166,7 +166,7 @@ build_docker_container() {
 #######################################
 install_git_command() {
   mkdir -p "$GIT_INSTALL_PATH"
-  cp "$TMP_DIR/$REPO_FILE_NAME/resources/git" "$GIT_INSTALL_PATH/git"
+  cp "$TMP_DIR/$REPO_FILE_NAME/git" "$GIT_INSTALL_PATH/git"
 }
 
 #######################################
