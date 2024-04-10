@@ -5,7 +5,7 @@
 set -euo pipefail
 
 readonly REPOSITORY=jnk22/libreelec-git-command
-readonly BRANCH_NAME=main
+readonly BRANCH=main
 readonly KODI_DOCKER_ADDON_NAME=service.system.docker
 readonly GIT_INSTALL_PATH=~/.local/bin
 readonly PROFILE_PATH=~/.profile
@@ -141,13 +141,13 @@ install_docker_addon() {
 # Download repository files and prepare for installation.
 # Globals:
 #   REPOSITORY
-#   BRANCH_NAME
+#   BRANCH
 #   TMP_DIR
 # Arguments:
 #   None
 #######################################
 download_resources() {
-  local repo_link=https://github.com/$REPOSITORY/raw/$BRANCH_NAME
+  local repo_link=https://github.com/$REPOSITORY/raw/$BRANCH
 
   wget -q -O "$TMP_DIR/Dockerfile" "$repo_link/Dockerfile"
   wget -q -O "$TMP_DIR/git" "$repo_link/git"
