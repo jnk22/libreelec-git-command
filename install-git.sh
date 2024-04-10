@@ -27,12 +27,8 @@ trap 'rm -rf -- "$TMP_DIR"' EXIT
 #   None
 #######################################
 main() {
-  # TODO: Check if 'git' command is already available.
-
   echo "Verifying that system is supported..."
-  if ! check_system_supported; then
-    failed_abort "This script only supports LibreELEC."
-  fi
+  check_system_supported || failed_abort "This script only supports LibreELEC."
 
   echo "Verifying that '$KODI_DOCKER_ADDON_NAME' is installed and 'docker' command is available..."
   if ! check_command_available docker; then
@@ -50,11 +46,11 @@ main() {
   echo "Install git wrapper command..."
   install_git_command
 
-  # TODO: Only modify profile if necessary.
-  echo "Adding $GIT_INSTALL_PATH to PATH..."
+  echo "Adding '$GIT_INSTALL_PATH' to PATH..."
   update_profile
 
   echo "Verifying that 'git' command is now available..."
+  [[ ":$PATH:" != *":$GIT_INSTALL_PATH:"* ]] && PATH="$PATH:$GIT_INSTALL_PATH"
   check_command_available git || failed_abort "Failed to install 'git' command. Please try again."
 
   echo "Installation finished!"
@@ -130,6 +126,7 @@ install_docker_addon() {
 
 #######################################
 # Download repository files and prepare for installation.
+# Globals:
 #   REPOSITORY
 #   BRANCH_NAME
 #   TMP_DIR
@@ -166,8 +163,6 @@ build_docker_container() {
 #   GIT_INSTALL_PATH
 # Arguments:
 #   None
-# Returns:
-#   None
 #######################################
 install_git_command() {
   mkdir -p "$GIT_INSTALL_PATH"
@@ -180,8 +175,6 @@ install_git_command() {
 # Globals:
 #   PROFILE_PATH
 # Arguments:
-#   None
-# Returns:
 #   None
 #######################################
 update_profile() {
