@@ -48,11 +48,12 @@ main() {
   echo "Install git wrapper command..."
   install_git_command
 
+  # TODO: Only modify profile if necessary.
   echo "Adding $GIT_INSTALL_PATH to PATH..."
   update_profile
 
-  echo "Verify that 'git' command is now available..."
-  check_command_available git || failed_abort "Git command not installed. Please try again."
+  echo "Verifying that 'git' command is now available..."
+  check_command_available git || failed_abort "Failed to install 'git' command. Please try again."
 
   echo "Installation finished!"
   echo "Please run 'source $PROFILE_PATH' or reconnect once to use the 'git' command."
@@ -152,7 +153,7 @@ download_resources() {
 #   0 if successful, 1 otherwise
 #######################################
 build_docker_container() {
-  docker build -t "$DOCKER_CONTAINER_NAME" "$TMP_DIR/Dockerfile" &>/dev/null || return 1
+  docker build -t "$DOCKER_CONTAINER_NAME" "$TMP_DIR" &>/dev/null || return 1
 }
 
 #######################################
@@ -169,6 +170,7 @@ build_docker_container() {
 install_git_command() {
   mkdir -p "$GIT_INSTALL_PATH"
   cp "$TMP_DIR/git" "$GIT_INSTALL_PATH/git"
+  chmod +x "$GIT_INSTALL_PATH/git"
 }
 
 #######################################
@@ -182,7 +184,7 @@ install_git_command() {
 #######################################
 update_profile() {
   local export_local_bin_path_line="export PATH=\"\$HOME/.local/bin:\$PATH\""
-  grep -qxF "$export_local_bin_path_line" &>/dev/null || echo "$export_local_bin_path_line" >>"$PROFILE_PATH"
+  grep -qxF "$export_local_bin_path_line" "$PROFILE_PATH" &>/dev/null || echo "$export_local_bin_path_line" >>"$PROFILE_PATH"
 }
 
 main
