@@ -11,6 +11,7 @@ readonly GIT_INSTALL_PATH=~/.local/bin
 readonly PROFILE_PATH=~/.profile
 readonly DOCKER_INSTALL_TIMEOUT=120
 readonly DOCKER_CONTAINER_NAME=git-command
+readonly DOCKER_BIN_PATH=~/.kodi/addons/$KODI_DOCKER_ADDON_NAME/bin/docker
 
 alias docker='~/.kodi/addons/$KODI_DOCKER_ADDON_NAME/bin/docker'
 
@@ -31,9 +32,8 @@ main() {
   check_system_supported || failed_abort "This script only supports LibreELEC."
 
   echo "Verifying that '$KODI_DOCKER_ADDON_NAME' is installed and 'docker' command is available..."
-  if ! check_command_available docker; then
+  if ! check_command_available_docker; then
     echo "Addon not installed. Installing addon now. This may take a while..."
-
     install_docker_addon || failed_abort "Could not install docker addon. Please install manually and try again."
   fi
 
@@ -85,6 +85,19 @@ check_system_supported() {
 }
 
 #######################################
+# Wrapper to verify that docker command is available.
+# Globals:
+#   DOCKER_BIN_PATH
+# Arguments:
+#   None
+# Returns:
+#   0 if available, 1 otherwise
+#######################################
+check_command_available_docker() {
+  command -v "$DOCKER_BIN_PATH" &>/dev/null || return 1
+}
+
+#######################################
 # Verify that a command is available.
 # Globals:
 #   None
@@ -112,7 +125,7 @@ install_docker_addon() {
   kodi-send --action="Action(\"Select\")" &>/dev/null
 
   local timeout_counter=0
-  until check_command_available docker || [ "$timeout_counter" -ge "$DOCKER_INSTALL_TIMEOUT" ]; do
+  until check_command_available_docker || [ "$timeout_counter" -ge "$DOCKER_INSTALL_TIMEOUT" ]; do
     if [[ "$timeout_counter" -eq 0 ]]; then
       echo "Waiting $DOCKER_INSTALL_TIMEOUT seconds for addon '$KODI_DOCKER_ADDON_NAME' to be installed..."
     fi
