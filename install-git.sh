@@ -21,6 +21,8 @@ trap 'rm -rf -- "$TMP_DIR"' EXIT
 # Run main function.
 # Globals:
 #   KODI_DOCKER_ADDON_NAME
+#   GIT_INSTALL_PATH
+#   PROFILE_PATH
 # Arguments:
 #   None
 #######################################
