@@ -43,7 +43,7 @@ repos:
   - repo: https://github.com/hadolint/hadolint
     rev: v2.12.1-beta
     hooks:
-      - id: hadolint-docker
+      - id: hadolint
   - repo: https://github.com/alessandrojcm/commitlint-pre-commit-hook
     rev: v9.14.0
     hooks:
