@@ -40,6 +40,9 @@ repos:
     hooks:
       - id: beautysh
         args: ["-i", "2"]
+        # Tempoarily fix to Python 3.11 version, until Python 3.12 support
+        # is available: https://github.com/lovesegfault/beautysh/issues/248
+        language_version: "3.11"
   - repo: https://github.com/igorshubovych/markdownlint-cli
     rev: v0.41.0
     hooks:
