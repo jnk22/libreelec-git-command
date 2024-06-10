@@ -35,7 +35,7 @@ versions:
 
 | Device         | Architecture | LibreELEC Version                          |
 | -------------- | ------------ | ------------------------------------------ |
-| NUC7JYB        | x86_64       | 11.0.6 _(Kodi 20.3)_, 10.0.2 _(Kodi 19.4)_ |
+| Intel NUC7JYB  | x86_64       | 11.0.6 _(Kodi 20.3)_, 10.0.2 _(Kodi 19.4)_ |
 | Raspberry Pi 3 | arm          | 10.0.2 _(Kodi 19.4)_                       |
 | Raspberry Pi 4 | aarch64      | 11.95.1 _(Kodi 21.0 RC1)_                  |
 
