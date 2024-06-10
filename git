@@ -2,10 +2,13 @@
 #
 # Wrapper script for git commands to run inside the Docker container.
 
-readonly KODI_DOCKER_ADDON_NAME=service.system.docker
 readonly DOCKER_CONTAINER_NAME=git-command
 
-alias docker='~/.kodi/addons/$KODI_DOCKER_ADDON_NAME/bin/docker'
+# The user might have a custom alias or uses some other docker binary which
+# we do not want to override.
+if ! command -v docker &>/dev/null; then
+  alias docker='~/.kodi/addons/service.system.docker/bin/docker'
+fi
 
 # If available on user's host, we pass SSH_AUTH_SOCK to the container.
 [[ -n "$SSH_AUTH_SOCK" ]] && EXTRA_ARGS="-e SSH_AUTH_SOCK=$SSH_AUTH_SOCK -v $SSH_AUTH_SOCK:$SSH_AUTH_SOCK:ro"
