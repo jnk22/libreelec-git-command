@@ -43,6 +43,28 @@ _Please note that this list is not exhaustive, and the script should function
 correctly on any device that runs LibreELEC and supports
 [containers](https://wiki.libreelec.tv/installation/docker)._
 
+## Development
+
+### Requirements
+
+- [Bash](https://www.gnu.org/software/bash/)
+- [Docker](https://www.docker.com/)
+- [shellspec](https://github.com/shellspec/shellspec)
+
+### Run Tests
+
+Running tests requires [shellspec](https://github.com/shellspec/shellspec) to
+be installed on your system.
+
+```bash
+shellspec --path ".:$PATH"
+```
+
+**Note:**
+_The `shellspec` path must be set to the directory that contains the `git`
+command wrapper to ensure that the actual wrapper is tested and not a
+system-installed executable of Git._
+
 ## Contributing
 
 Contributions are welcomed! Feel free to open an issue or a pull request.

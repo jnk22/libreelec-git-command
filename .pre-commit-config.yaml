@@ -35,6 +35,8 @@ repos:
     hooks:
       - id: shfmt
         args: ["-w", "-i", "2", "-ci"]
+        # Test specs have a specific format that should not be changed.
+        exclude: '^spec/.*_spec\.sh$'
   - repo: https://github.com/lovesegfault/beautysh
     rev: v6.2.1
     hooks:
@@ -43,6 +45,8 @@ repos:
         # Tempoarily fix to Python 3.11 version, until Python 3.12 support
         # is available: https://github.com/lovesegfault/beautysh/issues/248
         language_version: "3.11"
+        # Test specs have a specific format that should not be changed.
+        exclude: '^spec/.*_spec\.sh$'
   - repo: https://github.com/igorshubovych/markdownlint-cli
     rev: v0.41.0
     hooks:
