@@ -2,7 +2,7 @@
 #
 # Wrapper script for git commands to run inside the Docker container.
 
-readonly DOCKER_CONTAINER_NAME=git-command
+readonly CONTAINER_NAME=${CONTAINER_NAME:-"git-command"}
 
 # The user might have a custom alias or uses some other docker binary which
 # we do not want to override.
@@ -16,4 +16,4 @@ fi
 # We also pass the user id and group id to the container to ensure that the user
 # has the same permissions inside the container as outside.
 # shellcheck disable=SC2086
-docker run -it --rm --user "$(id -u):$(id -g)" -v "$HOME":/root -v "$PWD":/git $EXTRA_ARGS "$DOCKER_CONTAINER_NAME" "$@"
+docker run -it --rm --user "$(id -u):$(id -g)" -v "$HOME":/root -v "$PWD":/git $EXTRA_ARGS "$CONTAINER_NAME" "$@"
