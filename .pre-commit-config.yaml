@@ -48,7 +48,7 @@ repos:
         # Test specs have a specific format that should not be changed.
         exclude: '^spec/.*_spec\.sh$'
   - repo: https://github.com/igorshubovych/markdownlint-cli
-    rev: v0.42.0
+    rev: v0.43.0
     hooks:
       - id: markdownlint-fix
   - repo: https://github.com/AleksaC/hadolint-py
