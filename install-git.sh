@@ -78,10 +78,10 @@ failed_abort() {
 # Arguments:
 #   None
 # Returns:
-#   0 if supported, 1 otherwise
+#   0 if supported, non-zero otherwise
 #######################################
 check_system_supported() {
-  [[ $(grep ^NAME /etc/os-release | cut -d '=' -f 2 | sed "s/\"//g") == "LibreELEC" ]] || return 1
+  [[ $(grep ^NAME /etc/os-release | cut -d '=' -f 2 | sed "s/\"//g") == "LibreELEC" ]]
 }
 
 #######################################
@@ -91,10 +91,10 @@ check_system_supported() {
 # Arguments:
 #   None
 # Returns:
-#   0 if available, 1 otherwise
+#   0 if available, non-zero otherwise
 #######################################
 check_command_available_docker() {
-  command -v "$DOCKER_BIN_PATH" &>/dev/null || return 1
+  command -v "$DOCKER_BIN_PATH" &>/dev/null
 }
 
 #######################################
@@ -104,11 +104,11 @@ check_command_available_docker() {
 # Arguments:
 #   command name/path
 # Returns:
-#   0 if available, 1 otherwise
+#   0 if available, non-zero otherwise
 #######################################
 check_command_available() {
   local command_name=$1
-  command -v "$command_name" &>/dev/null || return 1
+  command -v "$command_name" &>/dev/null
 }
 
 #######################################
@@ -163,10 +163,10 @@ download_resources() {
 # Arguments:
 #   None
 # Returns:
-#   0 if successful, 1 otherwise
+#   0 if successful, non-zero otherwise
 #######################################
 build_docker_container() {
-  docker build -t "$DOCKER_CONTAINER_NAME" "$TMP_DIR" &>/dev/null || return 1
+  docker build -t "$DOCKER_CONTAINER_NAME" "$TMP_DIR" &>/dev/null
 }
 
 #######################################
