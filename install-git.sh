@@ -11,7 +11,8 @@ readonly LOCAL_BIN_PATH=.local/bin
 readonly GIT_INSTALL_DIR="$HOME/$LOCAL_BIN_PATH"
 readonly PROFILE_PATH="$HOME/.profile"
 readonly DOCKER_INSTALL_TIMEOUT=120
-readonly DOCKER_BIN=~/.kodi/addons/$KODI_DOCKER_ADDON_NAME/bin/docker
+readonly DOCKER_ADDON_DIR=$HOME/kodi/addons/$KODI_DOCKER_ADDON_NAME
+readonly DOCKER_BIN=$DOCKER_ADDON_PATH/bin/docker
 
 #######################################
 # Run main function.
@@ -27,11 +28,13 @@ main() {
   check_system_supported || failed_abort "This script only supports LibreELEC."
 
   echo "Verifying that '$KODI_DOCKER_ADDON_NAME' is installed and 'docker' command is available..."
-  if ! command -v "$DOCKER_BIN"; then
+  if ! check_docker_addon_installed; then
     echo "Addon not installed. Installing addon now. This may take a while..."
-    install_docker_addon
-    command -v "$DOCKER_BIN" || failed_abort "Could not install docker addon. Please install manually and try again."
+    install_docker_addon || failed_abort "Could not install docker addon. Please install manually and try again."
   fi
+
+  echo "Verifying that 'docker' command is available..."
+  command -v "$DOCKER_BIN" || failed_abort "Docker addon '$KODI_DOCKER_ADDON_NAME' is installed, but 'docker' command is not available for an uknown reason."
 
   echo "Download/Install git wrapper command..."
   install_git_command
@@ -75,6 +78,19 @@ check_system_supported() {
 }
 
 #######################################
+# Check whether docker addon is installed.
+# Globals:
+#   DOCKER_ADDON_DIR
+# Arguments:
+#   None
+# Returns:
+#   0 if installed, non-zero otherwise
+#######################################
+check_docker_addon_installed() {
+  [[ -d "$DOCKER_ADDON_DIR" ]]
+}
+
+#######################################
 # Install docker addon using 'kodi-send'.
 # Globals:
 #   KODI_DOCKER_ADDON_NAME
@@ -85,19 +101,31 @@ check_system_supported() {
 #   0 if successful, non-zero otherwise
 #######################################
 install_docker_addon() {
-  kodi-send --action="InstallAddon(\"$KODI_DOCKER_ADDON_NAME\")" &>/dev/null
-  kodi-send --action="Action(\"Left\")" &>/dev/null
-  kodi-send --action="Action(\"Select\")" &>/dev/null
-
+  local sleep_interval=1
   local timeout_counter=0
-  until command -v "$DOCKER_BIN" || [ "$timeout_counter" -ge "$DOCKER_INSTALL_TIMEOUT" ]; do
-    if [[ "$timeout_counter" -eq 0 ]]; then
-      echo "Waiting $DOCKER_INSTALL_TIMEOUT seconds for addon '$KODI_DOCKER_ADDON_NAME' to be installed..."
-    fi
 
-    sleep 1
-    timeout_counter=$((timeout_counter + 1))
+  # Try to trigger addon install, exit if kodi-send fails
+  for action in "InstallAddon(\"$KODI_DOCKER_ADDON_NAME\")" "Action(\"Left\")" "Action(\"Select\")"; do
+    if ! kodi-send --action="$action" &>/dev/null; then
+      echo "Error: Failed to send Kodi action: $action" >&2
+      return 1
+    fi
   done
+
+  echo "Waiting up to $DOCKER_INSTALL_TIMEOUT seconds for addon '$KODI_DOCKER_ADDON_NAME' to be installed..."
+
+  while ! check_docker_addon_installed && [[ $timeout_counter -lt $DOCKER_INSTALL_TIMEOUT ]]; do
+    printf "\rElapsed time: %ds" "$timeout_counter"
+    sleep "$sleep_interval"
+    timeout_counter=$((timeout_counter + sleep_interval))
+  done
+
+  if check_docker_addon_installed; then
+    echo "Addon '$KODI_DOCKER_ADDON_NAME' installed successfully."
+  else
+    echo "Timeout reached! Addon '$KODI_DOCKER_ADDON_NAME' not installed after $DOCKER_INSTALL_TIMEOUT seconds." >&2
+    return 2
+  fi
 }
 
 #######################################
