@@ -4,25 +4,21 @@
 
 set -euo pipefail
 
-readonly REPOSITORY=jnk22/libreelec-git-command
+readonly REPO_URL=https://github.com/jnk22/libreelec-git-command
 readonly BRANCH=main
 readonly KODI_DOCKER_ADDON_NAME=service.system.docker
-readonly GIT_INSTALL_PATH=~/.local/bin
-readonly PROFILE_PATH=~/.profile
+readonly LOCAL_BIN_PATH=.local/bin
+readonly GIT_INSTALL_DIR="$HOME/$LOCAL_BIN_PATH"
+readonly PROFILE_PATH="$HOME/.profile"
 readonly DOCKER_INSTALL_TIMEOUT=120
-readonly DOCKER_CONTAINER_NAME=git-command
-readonly DOCKER_BIN_PATH=~/.kodi/addons/$KODI_DOCKER_ADDON_NAME/bin/docker
-
-alias docker='~/.kodi/addons/$KODI_DOCKER_ADDON_NAME/bin/docker'
-
-TMP_DIR="$(mktemp -d)"
-trap 'rm -rf -- "$TMP_DIR"' EXIT
+readonly DOCKER_ADDON_DIR=$HOME/kodi/addons/$KODI_DOCKER_ADDON_NAME
+readonly DOCKER_BIN=$DOCKER_ADDON_PATH/bin/docker
 
 #######################################
 # Run main function.
 # Globals:
 #   KODI_DOCKER_ADDON_NAME
-#   GIT_INSTALL_PATH
+#   GIT_INSTALL_DIR
 #   PROFILE_PATH
 # Arguments:
 #   None
@@ -32,26 +28,23 @@ main() {
   check_system_supported || failed_abort "This script only supports LibreELEC."
 
   echo "Verifying that '$KODI_DOCKER_ADDON_NAME' is installed and 'docker' command is available..."
-  if ! check_command_available_docker; then
+  if ! check_docker_addon_installed; then
     echo "Addon not installed. Installing addon now. This may take a while..."
     install_docker_addon || failed_abort "Could not install docker addon. Please install manually and try again."
   fi
 
-  echo "Downloading installation resources..."
-  download_resources
+  echo "Verifying that 'docker' command is available..."
+  command -v "$DOCKER_BIN" || failed_abort "Docker addon '$KODI_DOCKER_ADDON_NAME' is installed, but 'docker' command is not available for an uknown reason."
 
-  echo "Building docker container..."
-  build_docker_container || failed_abort "Could not build git docker container."
-
-  echo "Install git wrapper command..."
+  echo "Download/Install git wrapper command..."
   install_git_command
 
-  echo "Adding '$GIT_INSTALL_PATH' to PATH..."
+  echo "Adding '$GIT_INSTALL_DIR' to PATH..."
   update_profile
 
   echo "Verifying that 'git' command is now available..."
-  [[ ":$PATH:" != *":$GIT_INSTALL_PATH:"* ]] && PATH="$PATH:$GIT_INSTALL_PATH"
-  check_command_available git || failed_abort "Failed to install 'git' command. Please try again."
+  [[ ":$PATH:" != *":$GIT_INSTALL_DIR:"* ]] && PATH="$PATH:$GIT_INSTALL_DIR"
+  command -v git || failed_abort "Failed to install 'git' command. Please try again."
 
   echo "Installation finished!"
   echo "Please run 'source $PROFILE_PATH' or reconnect once to use the 'git' command."
@@ -67,7 +60,7 @@ main() {
 failed_abort() {
   local error_msg=$1
 
-  echo "INSTALLATION FAILED: $error_msg"
+  echo "INSTALLATION FAILED: $error_msg" >&2
   exit 1
 }
 
@@ -78,37 +71,23 @@ failed_abort() {
 # Arguments:
 #   None
 # Returns:
-#   0 if supported, 1 otherwise
+#   0 if supported, non-zero otherwise
 #######################################
 check_system_supported() {
-  [[ $(grep ^NAME /etc/os-release | cut -d '=' -f 2 | sed "s/\"//g") == "LibreELEC" ]] || return 1
+  [[ $(grep ^NAME /etc/os-release | cut -d '=' -f 2 | sed "s/\"//g") == "LibreELEC" ]]
 }
 
 #######################################
-# Wrapper to verify that docker command is available.
+# Check whether docker addon is installed.
 # Globals:
-#   DOCKER_BIN_PATH
+#   DOCKER_ADDON_DIR
 # Arguments:
 #   None
 # Returns:
-#   0 if available, 1 otherwise
+#   0 if installed, non-zero otherwise
 #######################################
-check_command_available_docker() {
-  command -v "$DOCKER_BIN_PATH" &>/dev/null || return 1
-}
-
-#######################################
-# Verify that a command is available.
-# Globals:
-#   None
-# Arguments:
-#   command_name
-# Returns:
-#   0 if available, 1 otherwise
-#######################################
-check_command_available() {
-  local command_name=$1
-  command -v "$command_name" &>/dev/null || return 1
+check_docker_addon_installed() {
+  [[ -d "$DOCKER_ADDON_DIR" ]]
 }
 
 #######################################
@@ -118,81 +97,65 @@ check_command_available() {
 #   DOCKER_INSTALL_TIMEOUT
 # Arguments:
 #   None
+# Returns:
+#   0 if successful, non-zero otherwise
 #######################################
 install_docker_addon() {
-  kodi-send --action="InstallAddon(\"$KODI_DOCKER_ADDON_NAME\")" &>/dev/null
-  kodi-send --action="Action(\"Left\")" &>/dev/null
-  kodi-send --action="Action(\"Select\")" &>/dev/null
-
+  local sleep_interval=1
   local timeout_counter=0
-  until check_command_available_docker || [ "$timeout_counter" -ge "$DOCKER_INSTALL_TIMEOUT" ]; do
-    if [[ "$timeout_counter" -eq 0 ]]; then
-      echo "Waiting $DOCKER_INSTALL_TIMEOUT seconds for addon '$KODI_DOCKER_ADDON_NAME' to be installed..."
-    fi
 
-    sleep 1
-    timeout_counter=$((timeout_counter + 1))
+  # Try to trigger addon install, exit if kodi-send fails
+  for action in "InstallAddon(\"$KODI_DOCKER_ADDON_NAME\")" "Action(\"Left\")" "Action(\"Select\")"; do
+    if ! kodi-send --action="$action" &>/dev/null; then
+      echo "Error: Failed to send Kodi action: $action" >&2
+      return 1
+    fi
   done
 
-  check_command_available docker
-}
+  echo "Waiting up to $DOCKER_INSTALL_TIMEOUT seconds for addon '$KODI_DOCKER_ADDON_NAME' to be installed..."
 
-#######################################
-# Download repository files and prepare for installation.
-# Globals:
-#   REPOSITORY
-#   BRANCH
-#   TMP_DIR
-# Arguments:
-#   None
-#######################################
-download_resources() {
-  local repo_link=https://github.com/$REPOSITORY/raw/$BRANCH
+  while ! check_docker_addon_installed && [[ $timeout_counter -lt $DOCKER_INSTALL_TIMEOUT ]]; do
+    printf "\rElapsed time: %ds" "$timeout_counter"
+    sleep "$sleep_interval"
+    timeout_counter=$((timeout_counter + sleep_interval))
+  done
 
-  wget -q -O "$TMP_DIR/Dockerfile" "$repo_link/Dockerfile"
-  wget -q -O "$TMP_DIR/git" "$repo_link/git"
-}
-
-#######################################
-# Build and install docker container.
-# Globals:
-#   TMP_DIR
-#   REPO_FILE_NAME
-#   DOCKER_CONTAINER_NAME
-# Arguments:
-#   None
-# Returns:
-#   0 if successful, 1 otherwise
-#######################################
-build_docker_container() {
-  docker build -t "$DOCKER_CONTAINER_NAME" "$TMP_DIR" &>/dev/null || return 1
+  if check_docker_addon_installed; then
+    echo "Addon '$KODI_DOCKER_ADDON_NAME' installed successfully."
+  else
+    echo "Timeout reached! Addon '$KODI_DOCKER_ADDON_NAME' not installed after $DOCKER_INSTALL_TIMEOUT seconds." >&2
+    return 2
+  fi
 }
 
 #######################################
 # Install git command.
 # Globals:
-#   TMP_DIR
-#   REPO_FILE_NAME#
-#   GIT_INSTALL_PATH
+#   GIT_INSTALL_DIR
+#   REPO_URL
+#   BRANCH
 # Arguments:
 #   None
 #######################################
 install_git_command() {
-  mkdir -p "$GIT_INSTALL_PATH"
-  cp "$TMP_DIR/git" "$GIT_INSTALL_PATH/git"
-  chmod +x "$GIT_INSTALL_PATH/git"
+  mkdir -p "$GIT_INSTALL_DIR"
+  wget -q -O "$GIT_INSTALL_DIR/git" "$REPO_URL/raw/$BRANCH/git"
+  chmod +x "$GIT_INSTALL_DIR/git"
 }
 
 #######################################
 # Update profile source to include binary install path.
 # Globals:
+#   LOCAL_BIN_PATH
 #   PROFILE_PATH
 # Arguments:
 #   None
 #######################################
 update_profile() {
-  local local_bin_path_line="PATH=\"\$HOME/.local/bin:\$PATH\""
-  grep -qF "$local_bin_path_line" "$PROFILE_PATH" &>/dev/null || echo -e "\n$local_bin_path_line" >>"$PROFILE_PATH"
+  # Do not add '$HOME/.local/bin' if it already exists in any way.
+  if ! grep -qE "PATH=.*(\$HOME|~)/${LOCAL_BIN_PATH//./\\.}" "$PROFILE_PATH"; then
+    echo -e "\nPATH=\"\$HOME/${LOCAL_BIN_PATH}:\$PATH\"" >>"$PROFILE_PATH"
+  fi
 }
 
 main
