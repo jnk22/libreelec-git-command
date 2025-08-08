@@ -67,6 +67,12 @@ shellspec
 > Tests must be executed within the cloned repository's main directory to
 > ensure that tests are run with the actual `git` wrapper.
 
+### Notes
+
+- **Bash arrays cannot be used**. LibreELEC provides
+  [BusyBox](https://busybox.net/source.html) as Bash implementation, which does
+  not support arrays.
+
 ## Acknowledgments
 
 This repository was initially based on the forum post [Installation of git on
