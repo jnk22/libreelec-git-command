@@ -67,22 +67,6 @@ shellspec
 > Tests must be executed within the cloned repository's main directory to
 > ensure that tests are run with the actual `git` wrapper.
 
-## Contributing
-
-Contributions are welcomed! Feel free to open an issue or a pull request.
-
-This project utilizes pre-commit to maintain code quality.
-
-To set up pre-commit, install it using your preferred package manager and
-execute the following commands within the repository:
-
-```bash
-pre-commit install
-pre-commit install --hook-type commit-msg
-```
-
-This ensures that your code is linted and formatted before being committed.
-
 ## Acknowledgments
 
 This repository was initially based on the forum post [Installation of git on
