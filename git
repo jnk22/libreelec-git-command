@@ -3,7 +3,7 @@
 # Wrapper script for git commands to run inside the Docker container.
 
 readonly container_workdir=/git
-readonly image_name="${IMAGE_NAME:-git-command}"
+readonly image_name="${IMAGE_NAME:-alpine/git}"
 readonly image_tag="${IMAGE_TAG:-latest}"
 
 # The user might have a custom alias or uses some other docker binary which
@@ -48,5 +48,6 @@ done
   "${config_volumes[@]}" \
   "${ssh_agent_mount[@]}" \
   --workdir "$container_workdir" \
+  --entrypoint git \
   "${image_name}:${image_tag}" \
   "${args[@]}"

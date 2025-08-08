@@ -11,11 +11,7 @@ readonly LOCAL_BIN_PATH=.local/bin
 readonly GIT_INSTALL_DIR="$HOME/$LOCAL_BIN_PATH"
 readonly PROFILE_PATH="$HOME/.profile"
 readonly DOCKER_INSTALL_TIMEOUT=120
-readonly DOCKER_IMAGE_NAME=git-command
 readonly DOCKER_BIN=~/.kodi/addons/$KODI_DOCKER_ADDON_NAME/bin/docker
-
-TMP_DIR="$(mktemp -d)"
-trap 'rm -rf -- "$TMP_DIR"' EXIT
 
 #######################################
 # Run main function.
@@ -31,18 +27,13 @@ main() {
   check_system_supported || failed_abort "This script only supports LibreELEC."
 
   echo "Verifying that '$KODI_DOCKER_ADDON_NAME' is installed and 'docker' command is available..."
-  if ! command -v docker; then
+  if ! command -v "$DOCKER_BIN"; then
     echo "Addon not installed. Installing addon now. This may take a while..."
-    install_docker_addon || failed_abort "Could not install docker addon. Please install manually and try again."
+    install_docker_addon
+    command -v "$DOCKER_BIN" || failed_abort "Could not install docker addon. Please install manually and try again."
   fi
 
-  echo "Downloading installation resources..."
-  download_resources
-
-  echo "Building docker container..."
-  build_docker_container || failed_abort "Could not build git docker container."
-
-  echo "Install git wrapper command..."
+  echo "Download/Install git wrapper command..."
   install_git_command
 
   echo "Adding '$GIT_INSTALL_DIR' to PATH..."
@@ -99,7 +90,7 @@ install_docker_addon() {
   kodi-send --action="Action(\"Select\")" &>/dev/null
 
   local timeout_counter=0
-  until command -v docker || [ "$timeout_counter" -ge "$DOCKER_INSTALL_TIMEOUT" ]; do
+  until command -v "$DOCKER_BIN" || [ "$timeout_counter" -ge "$DOCKER_INSTALL_TIMEOUT" ]; do
     if [[ "$timeout_counter" -eq 0 ]]; then
       echo "Waiting $DOCKER_INSTALL_TIMEOUT seconds for addon '$KODI_DOCKER_ADDON_NAME' to be installed..."
     fi
@@ -107,53 +98,20 @@ install_docker_addon() {
     sleep 1
     timeout_counter=$((timeout_counter + 1))
   done
-
-  command -v docker
-}
-
-#######################################
-# Download repository files and prepare for installation.
-# Globals:
-#   REPO_URL
-#   BRANCH
-#   TMP_DIR
-# Arguments:
-#   None
-#######################################
-download_resources() {
-  local base_url=$REPO_URL/raw/$BRANCH
-
-  wget -q -O "$TMP_DIR/Dockerfile" "$base_url/Dockerfile" &
-  wget -q -O "$TMP_DIR/git" "$base_url/git" &
-  wait
-}
-
-#######################################
-# Build and install docker container.
-# Globals:
-#   TMP_DIR
-#   DOCKER_BIN
-#   DOCKER_IMAGE_NAME
-# Arguments:
-#   None
-# Returns:
-#   0 if successful, non-zero otherwise
-#######################################
-build_docker_container() {
-  "$DOCKER_BIN" build -t "$DOCKER_IMAGE_NAME" "$TMP_DIR" &>/dev/null
 }
 
 #######################################
 # Install git command.
 # Globals:
-#   TMP_DIR
 #   GIT_INSTALL_DIR
+#   REPO_URL
+#   BRANCH
 # Arguments:
 #   None
 #######################################
 install_git_command() {
   mkdir -p "$GIT_INSTALL_DIR"
-  cp "$TMP_DIR/git" "$GIT_INSTALL_DIR/git"
+  wget -q -O "$GIT_INSTALL_DIR/git" "$REPO_URL/raw/$BRANCH/git"
   chmod +x "$GIT_INSTALL_DIR/git"
 }
 
