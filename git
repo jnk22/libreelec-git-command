@@ -2,6 +2,8 @@
 #
 # Wrapper to run git using a Docker container.
 
+read -r -a docker_opts_array <<<"$DOCKER_OPTS"
+
 docker_bin=$(command -v docker || echo "$HOME/.kodi/addons/service.system.docker/bin/docker")
 if [[ ! -x "$docker_bin" ]]; then
   echo "docker binary not found or not executable" >&2
@@ -22,7 +24,7 @@ for path in .ssh .gitconfig .config/git; do
   fi
 done
 
-"$docker_bin" run --rm -it \
+"$docker_bin" run "${docker_opts_array[@]}" --rm -it \
   --user "$(id -u):$(id -g)" \
   --volume "$PWD":"$PWD" \
   "${config_volumes[@]}" \
