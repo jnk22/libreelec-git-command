@@ -7,8 +7,9 @@ set -euo pipefail
 readonly REPO_URL=https://github.com/jnk22/libreelec-git-command
 readonly BRANCH=main
 readonly KODI_DOCKER_ADDON_NAME=service.system.docker
-readonly GIT_INSTALL_DIR=~/.local/bin
-readonly PROFILE_PATH=~/.profile
+readonly LOCAL_BIN_PATH=.local/bin
+readonly GIT_INSTALL_DIR="$HOME/$LOCAL_BIN_PATH"
+readonly PROFILE_PATH="$HOME/.profile"
 readonly DOCKER_INSTALL_TIMEOUT=120
 readonly DOCKER_IMAGE_NAME=git-command
 readonly DOCKER_BIN=~/.kodi/addons/$KODI_DOCKER_ADDON_NAME/bin/docker
@@ -159,13 +160,16 @@ install_git_command() {
 #######################################
 # Update profile source to include binary install path.
 # Globals:
+#   LOCAL_BIN_PATH
 #   PROFILE_PATH
 # Arguments:
 #   None
 #######################################
 update_profile() {
-  local local_bin_path_line="PATH=\"\$HOME/.local/bin:\$PATH\""
-  grep -qF "$local_bin_path_line" "$PROFILE_PATH" &>/dev/null || echo -e "\n$local_bin_path_line" >>"$PROFILE_PATH"
+  # Do not add '$HOME/.local/bin' if it already exists in any way.
+  if ! grep -qE "PATH=.*(\$HOME|~)/${LOCAL_BIN_PATH//./\\.}" "$PROFILE_PATH"; then
+    echo -e "\nPATH=\"\$HOME/${LOCAL_BIN_PATH}:\$PATH\"" >>"$PROFILE_PATH"
+  fi
 }
 
 main
