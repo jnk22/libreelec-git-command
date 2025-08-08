@@ -13,7 +13,7 @@ readonly DOCKER_INSTALL_TIMEOUT=120
 readonly DOCKER_CONTAINER_NAME=git-command
 readonly DOCKER_BIN_PATH=~/.kodi/addons/$KODI_DOCKER_ADDON_NAME/bin/docker
 
-alias docker='~/.kodi/addons/$KODI_DOCKER_ADDON_NAME/bin/docker'
+alias docker="\$DOCKER_BIN_PATH"
 
 TMP_DIR="$(mktemp -d)"
 trap 'rm -rf -- "$TMP_DIR"' EXIT
