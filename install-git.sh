@@ -12,7 +12,7 @@ readonly GIT_INSTALL_DIR="$HOME/$LOCAL_BIN_PATH"
 readonly PROFILE_PATH="$HOME/.profile"
 readonly DOCKER_INSTALL_TIMEOUT=120
 readonly DOCKER_ADDON_DIR=$HOME/kodi/addons/$KODI_DOCKER_ADDON_NAME
-readonly DOCKER_BIN=$DOCKER_ADDON_PATH/bin/docker
+readonly DOCKER_BIN=$DOCKER_ADDON_DIR/bin/docker
 
 #######################################
 # Run main function.
