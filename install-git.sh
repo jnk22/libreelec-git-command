@@ -91,6 +91,8 @@ check_system_supported() {
 #   DOCKER_INSTALL_TIMEOUT
 # Arguments:
 #   None
+# Returns:
+#   0 if successful, non-zero otherwise
 #######################################
 install_docker_addon() {
   kodi-send --action="InstallAddon(\"$KODI_DOCKER_ADDON_NAME\")" &>/dev/null
