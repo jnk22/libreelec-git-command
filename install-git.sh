@@ -67,7 +67,7 @@ main() {
 failed_abort() {
   local error_msg=$1
 
-  echo "INSTALLATION FAILED: $error_msg"
+  echo "INSTALLATION FAILED: $error_msg" >&2
   exit 1
 }
 
