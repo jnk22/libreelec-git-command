@@ -11,9 +11,8 @@ if ! command -v docker &>/dev/null; then
 fi
 
 # If available on user's host, we pass SSH_AUTH_SOCK to the container.
-[[ -n "$SSH_AUTH_SOCK" ]] && EXTRA_ARGS="-e SSH_AUTH_SOCK=$SSH_AUTH_SOCK -v $SSH_AUTH_SOCK:$SSH_AUTH_SOCK:ro"
+[[ -n "$SSH_AUTH_SOCK" ]] && EXTRA_ARGS=(-e SSH_AUTH_SOCK="$SSH_AUTH_SOCK" -v "$SSH_AUTH_SOCK:$SSH_AUTH_SOCK":ro)
 
 # We also pass the user id and group id to the container to ensure that the user
 # has the same permissions inside the container as outside.
-# shellcheck disable=SC2086
-docker run -it --rm --user "$(id -u):$(id -g)" -v "$HOME":/root -v "$PWD":/git $EXTRA_ARGS "$CONTAINER_NAME" "$@"
+docker run -it --rm --user "$(id -u):$(id -g)" -v "$HOME":/root -v "$PWD":/git "${EXTRA_ARGS[@]}" "$CONTAINER_NAME" "$@"
