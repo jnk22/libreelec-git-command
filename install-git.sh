@@ -32,7 +32,7 @@ main() {
   check_system_supported || failed_abort "This script only supports LibreELEC."
 
   echo "Verifying that '$KODI_DOCKER_ADDON_NAME' is installed and 'docker' command is available..."
-  if ! check_command_available_docker; then
+  if ! command -v docker; then
     echo "Addon not installed. Installing addon now. This may take a while..."
     install_docker_addon || failed_abort "Could not install docker addon. Please install manually and try again."
   fi
@@ -51,7 +51,7 @@ main() {
 
   echo "Verifying that 'git' command is now available..."
   [[ ":$PATH:" != *":$GIT_INSTALL_PATH:"* ]] && PATH="$PATH:$GIT_INSTALL_PATH"
-  check_command_available git || failed_abort "Failed to install 'git' command. Please try again."
+  command -v git || failed_abort "Failed to install 'git' command. Please try again."
 
   echo "Installation finished!"
   echo "Please run 'source $PROFILE_PATH' or reconnect once to use the 'git' command."
@@ -85,33 +85,6 @@ check_system_supported() {
 }
 
 #######################################
-# Wrapper to verify that docker command is available.
-# Globals:
-#   DOCKER_BIN_PATH
-# Arguments:
-#   None
-# Returns:
-#   0 if available, non-zero otherwise
-#######################################
-check_command_available_docker() {
-  command -v "$DOCKER_BIN_PATH" &>/dev/null
-}
-
-#######################################
-# Verify that a command is available.
-# Globals:
-#   None
-# Arguments:
-#   command name/path
-# Returns:
-#   0 if available, non-zero otherwise
-#######################################
-check_command_available() {
-  local command_name=$1
-  command -v "$command_name" &>/dev/null
-}
-
-#######################################
 # Install docker addon using 'kodi-send'.
 # Globals:
 #   KODI_DOCKER_ADDON_NAME
@@ -125,7 +98,7 @@ install_docker_addon() {
   kodi-send --action="Action(\"Select\")" &>/dev/null
 
   local timeout_counter=0
-  until check_command_available_docker || [ "$timeout_counter" -ge "$DOCKER_INSTALL_TIMEOUT" ]; do
+  until command -v docker || [ "$timeout_counter" -ge "$DOCKER_INSTALL_TIMEOUT" ]; do
     if [[ "$timeout_counter" -eq 0 ]]; then
       echo "Waiting $DOCKER_INSTALL_TIMEOUT seconds for addon '$KODI_DOCKER_ADDON_NAME' to be installed..."
     fi
@@ -134,7 +107,7 @@ install_docker_addon() {
     timeout_counter=$((timeout_counter + 1))
   done
 
-  check_command_available docker
+  command -v docker
 }
 
 #######################################
