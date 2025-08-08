@@ -102,7 +102,7 @@ check_command_available_docker() {
 # Globals:
 #   None
 # Arguments:
-#   command_name
+#   command name/path
 # Returns:
 #   0 if available, 1 otherwise
 #######################################
@@ -173,7 +173,7 @@ build_docker_container() {
 # Install git command.
 # Globals:
 #   TMP_DIR
-#   REPO_FILE_NAME#
+#   REPO_FILE_NAME
 #   GIT_INSTALL_PATH
 # Arguments:
 #   None
