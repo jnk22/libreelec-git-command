@@ -1,13 +1,7 @@
 #!/usr/bin/env bash
 #
-# Wrapper script for git commands to run inside the Docker container.
+# Wrapper to run git using a Docker container.
 
-readonly container_workdir=/git
-readonly image_name="${IMAGE_NAME:-alpine/git}"
-readonly image_tag="${IMAGE_TAG:-latest}"
-
-# The user might have a custom alias or uses some other docker binary which
-# we do not want to override.
 docker_bin=$(command -v docker || echo "$HOME/.kodi/addons/service.system.docker/bin/docker")
 if [[ ! -x "$docker_bin" ]]; then
   echo "docker binary not found or not executable" >&2
@@ -20,20 +14,6 @@ if [[ -S "$SSH_AUTH_SOCK" ]]; then
   ssh_agent_mount=(--volume "$SSH_AUTH_SOCK:$SSH_AUTH_SOCK" --env SSH_AUTH_SOCK="$SSH_AUTH_SOCK")
 fi
 
-# To support absolute paths, we must mount root '/' as working directory and
-# prepend it to the work directory within the container. Otherwise, we just
-# mount the current working directory (PWD) as working directory.
-args=()
-host_workdir=$PWD
-for arg in "$@"; do
-  if [[ "$arg" == /* ]]; then
-    args+=("$container_workdir$arg")
-    host_workdir=/
-  else
-    args+=("$arg")
-  fi
-done
-
 # Mount additional SSH and Git configurations if available on host.
 config_volumes=()
 for path in .ssh .gitconfig .config/git; do
@@ -44,10 +24,9 @@ done
 
 "$docker_bin" run --rm -it \
   --user "$(id -u):$(id -g)" \
-  --volume "$host_workdir":"$container_workdir" \
+  --volume "$PWD":"$PWD" \
   "${config_volumes[@]}" \
   "${ssh_agent_mount[@]}" \
-  --workdir "$container_workdir" \
-  --entrypoint git \
-  "${image_name}:${image_tag}" \
-  "${args[@]}"
+  --workdir "$PWD" \
+  "${IMAGE_NAME:-alpine/git}:${IMAGE_TAG:-latest}" \
+  "$@"
