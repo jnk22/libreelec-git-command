@@ -51,10 +51,6 @@ repos:
     rev: v0.44.0
     hooks:
       - id: markdownlint-fix
-  - repo: https://github.com/AleksaC/hadolint-py
-    rev: v2.12.1b3
-    hooks:
-      - id: hadolint
   - repo: https://github.com/alessandrojcm/commitlint-pre-commit-hook
     rev: v9.22.0
     hooks:
