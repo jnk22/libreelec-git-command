@@ -4,16 +4,14 @@
 
 set -euo pipefail
 
-readonly REPOSITORY=jnk22/libreelec-git-command
+readonly REPO_URL=https://github.com/jnk22/libreelec-git-command
 readonly BRANCH=main
 readonly KODI_DOCKER_ADDON_NAME=service.system.docker
-readonly GIT_INSTALL_PATH=~/.local/bin
+readonly GIT_INSTALL_DIR=~/.local/bin
 readonly PROFILE_PATH=~/.profile
 readonly DOCKER_INSTALL_TIMEOUT=120
-readonly DOCKER_CONTAINER_NAME=git-command
-readonly DOCKER_BIN_PATH=~/.kodi/addons/$KODI_DOCKER_ADDON_NAME/bin/docker
-
-alias docker="\$DOCKER_BIN_PATH"
+readonly DOCKER_IMAGE_NAME=git-command
+readonly DOCKER_BIN=~/.kodi/addons/$KODI_DOCKER_ADDON_NAME/bin/docker
 
 TMP_DIR="$(mktemp -d)"
 trap 'rm -rf -- "$TMP_DIR"' EXIT
@@ -22,7 +20,7 @@ trap 'rm -rf -- "$TMP_DIR"' EXIT
 # Run main function.
 # Globals:
 #   KODI_DOCKER_ADDON_NAME
-#   GIT_INSTALL_PATH
+#   GIT_INSTALL_DIR
 #   PROFILE_PATH
 # Arguments:
 #   None
@@ -46,11 +44,11 @@ main() {
   echo "Install git wrapper command..."
   install_git_command
 
-  echo "Adding '$GIT_INSTALL_PATH' to PATH..."
+  echo "Adding '$GIT_INSTALL_DIR' to PATH..."
   update_profile
 
   echo "Verifying that 'git' command is now available..."
-  [[ ":$PATH:" != *":$GIT_INSTALL_PATH:"* ]] && PATH="$PATH:$GIT_INSTALL_PATH"
+  [[ ":$PATH:" != *":$GIT_INSTALL_DIR:"* ]] && PATH="$PATH:$GIT_INSTALL_DIR"
   command -v git || failed_abort "Failed to install 'git' command. Please try again."
 
   echo "Installation finished!"
@@ -115,17 +113,17 @@ install_docker_addon() {
 #######################################
 # Download repository files and prepare for installation.
 # Globals:
-#   REPOSITORY
+#   REPO_URL
 #   BRANCH
 #   TMP_DIR
 # Arguments:
 #   None
 #######################################
 download_resources() {
-  local repo_link=https://github.com/$REPOSITORY/raw/$BRANCH
+  local base_url=$REPO_URL/raw/$BRANCH
 
-  wget -q -O "$TMP_DIR/Dockerfile" "$repo_link/Dockerfile" &
-  wget -q -O "$TMP_DIR/git" "$repo_link/git" &
+  wget -q -O "$TMP_DIR/Dockerfile" "$base_url/Dockerfile" &
+  wget -q -O "$TMP_DIR/git" "$base_url/git" &
   wait
 }
 
@@ -133,30 +131,29 @@ download_resources() {
 # Build and install docker container.
 # Globals:
 #   TMP_DIR
-#   REPO_FILE_NAME
-#   DOCKER_CONTAINER_NAME
+#   DOCKER_BIN
+#   DOCKER_IMAGE_NAME
 # Arguments:
 #   None
 # Returns:
 #   0 if successful, non-zero otherwise
 #######################################
 build_docker_container() {
-  docker build -t "$DOCKER_CONTAINER_NAME" "$TMP_DIR" &>/dev/null
+  "$DOCKER_BIN" build -t "$DOCKER_IMAGE_NAME" "$TMP_DIR" &>/dev/null
 }
 
 #######################################
 # Install git command.
 # Globals:
 #   TMP_DIR
-#   REPO_FILE_NAME
-#   GIT_INSTALL_PATH
+#   GIT_INSTALL_DIR
 # Arguments:
 #   None
 #######################################
 install_git_command() {
-  mkdir -p "$GIT_INSTALL_PATH"
-  cp "$TMP_DIR/git" "$GIT_INSTALL_PATH/git"
-  chmod +x "$GIT_INSTALL_PATH/git"
+  mkdir -p "$GIT_INSTALL_DIR"
+  cp "$TMP_DIR/git" "$GIT_INSTALL_DIR/git"
+  chmod +x "$GIT_INSTALL_DIR/git"
 }
 
 #######################################
