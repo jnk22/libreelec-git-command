@@ -3,35 +3,30 @@
 # Set to PWD to ensure that 'git' is the local git wrapper.
 export PATH=$PWD:$PATH
 
-get_git_command_filetype() {
-  file -b "$(command -v git)"
-}
-
 run_git_tag_version() {
   local tag="$1"
   IMAGE_TAG=$tag git --version
 }
 
 create_and_clone_into_bare_repo() {
-  local directory="$1"
-  cd "$directory" || exit 1
-  mkdir repo.git
-  cd repo.git || exit 1
-  git init --bare -b main
-  cd .. || exit 1
-  git clone repo.git
+  local working_dir="$1"
+  cd "$working_dir" || exit 1
+  git init --bare -b main repo.git
+  git clone repo.git # Clones './repo.git' into './repo'
 }
 
 clone_to_relative_path() {
-  tar -xf ./spec/data/test-repo.tar -C "$1"
-  cd "$1" || exit 1
-  git clone test-repo relative-path-repo
+  local working_dir="$1"
+  cd "$working_dir" || exit 1
+  tar -xf "$OLDPWD/spec/data/test-repo.tar"
+  git clone ./test-repo relative-path-repo
 }
 
 clone_to_absolute_path() {
-  tar -xf ./spec/data/test-repo.tar -C "$1"
-  cd "$1" || exit 1
-  git clone test-repo "$(realpath "$1"/absolute-path-repo)"
+  local working_dir="$1"
+  cd "$working_dir" || exit 1
+  tar -xf "$OLDPWD/spec/data/test-repo.tar"
+  git clone test-repo "$(realpath "$working_dir/absolute-path-repo")"
 }
 
 Describe 'git wrapper check'
@@ -80,37 +75,40 @@ End
 Describe 'git clone'
   # Related issue: https://github.com/jnk22/libreelec-git-command/issues/2
   It 'Creates a bare repo and clones it into another directory'
+    repo_name=repo
     tmpdir_bare="$(mktemp -d)"
-    trap 'rm -rf -- "$tmpdir_bare"' EXIT
-    Path RepoPath="$tmpdir_bare"
     When call create_and_clone_into_bare_repo "$tmpdir_bare"
-    The status should be success
-    The path RepoPath should be exist
-    The line 1 should include "Initialized empty Git repository in $tmpdir_bare/repo.git/"
+    Path RepoPath="$tmpdir_bare/$repo_name"
+    The line 1 should include "Initialized empty Git repository in $tmpdir_bare/$repo_name.git/"
     The line 2 should include "Cloning into 'repo'..."
     The line 3 should include "warning: You appear to have cloned an empty repository."
     The line 4 should include "done."
+    The path RepoPath should be exist
+    The status should be success
+    rm -rf "$tmpdir_bare"
   End
 
   It 'Clones test repository to a relative path in /tmp directory on host'
+    repo_name=relative-path-repo
     tmpdir_relative="$(mktemp -d)"
-    trap 'rm -rf -- "$tmpdir_relative"' EXIT
-    Path RepoPath="$tmpdir_relative"/relative-path-repo
     When call clone_to_relative_path "$tmpdir_relative"
-    The line 1 should include "Cloning into 'relative-path-repo'..."
+    Path RepoPath="$tmpdir_relative/$repo_name"
+    The line 1 should include "Cloning into '$repo_name'..."
     The line 2 should include "done."
     The path RepoPath should be exist
     The status should be success
+    rm -rf "$tmpdir_relative"
   End
 
   It 'Clones test repository to an absolute path in /tmp directory on host'
+    repo_name=absolute-path-repo
     tmpdir_absolute="$(mktemp -d)"
-    trap 'rm -rf -- "$tmpdir_absolute"' EXIT
-    Path RepoPath="$tmpdir_absolute"/absolute-path-repo
+    Path RepoPath="$tmpdir_absolute/$repo_name"
     When call clone_to_absolute_path "$tmpdir_absolute"
-    The line 1 should include "Cloning into '$tmpdir_absolute/absolute-path-repo'..."
+    The line 1 should include "Cloning into '$tmpdir_absolute/$repo_name'..."
     The line 2 should include "done."
     The path RepoPath should be exist
     The status should be success
+    rm -rf "$tmpdir_absolute"
   End
 End
