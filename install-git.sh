@@ -14,6 +14,8 @@ readonly DOCKER_INSTALL_TIMEOUT=120
 readonly DOCKER_ADDON_DIR=$HOME/kodi/addons/$KODI_DOCKER_ADDON_NAME
 readonly DOCKER_BIN=$DOCKER_ADDON_DIR/bin/docker
 
+alias docker='$DOCKER_BIN'
+
 #######################################
 # Run main function.
 # Globals:
@@ -32,9 +34,6 @@ main() {
     echo "Addon not installed. Installing addon now. This may take a while..."
     install_docker_addon || failed_abort "Could not install docker addon. Please install manually and try again."
   fi
-
-  echo "Verifying that 'docker' command is available..."
-  command -v "$DOCKER_BIN" || failed_abort "Docker addon '$KODI_DOCKER_ADDON_NAME' is installed, but 'docker' command is not available for an uknown reason."
 
   echo "Download/Install git wrapper command..."
   install_git_command
@@ -87,7 +86,7 @@ check_system_supported() {
 #   0 if installed, non-zero otherwise
 #######################################
 check_docker_addon_installed() {
-  [[ -d "$DOCKER_ADDON_DIR" ]]
+  command -v docker
 }
 
 #######################################
