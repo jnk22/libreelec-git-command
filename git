@@ -2,6 +2,8 @@
 #
 # Wrapper to run git using a Docker container.
 
+readonly container_image="${IMAGE_NAME:-alpine/git}:${IMAGE_TAG:-latest}"
+
 docker_bin=$(command -v docker || echo "$HOME/.kodi/addons/service.system.docker/bin/docker")
 if [[ ! -x "$docker_bin" ]]; then
   echo "docker binary not found or not executable" >&2
@@ -11,24 +13,18 @@ fi
 # Passthrough SSH_AUTH_SOCK if set on host.
 ssh_agent_mount=""
 if [[ -S "$SSH_AUTH_SOCK" ]]; then
-  ssh_agent_mount="--volume \"$SSH_AUTH_SOCK:$SSH_AUTH_SOCK\" --env SSH_AUTH_SOCK=\"$SSH_AUTH_SOCK\""
+  ssh_agent_mount="--volume $SSH_AUTH_SOCK:$SSH_AUTH_SOCK --env SSH_AUTH_SOCK=$SSH_AUTH_SOCK"
 fi
 
 # Mount additional SSH and Git configurations if available on host.
 config_volumes=""
 for path in .ssh .gitconfig .config/git; do
   if [[ -f "$path" || -d "$path" ]]; then
-    config_volumes="$config_volumes --volume \"$HOME/$path:/$path:ro\""
+    config_volumes="$config_volumes --volume $HOME/$path:/$path:ro"
   fi
 done
 
-# Run Docker command
-# We use `eval` to handle the quoted options in strings
-eval "$docker_bin run $DOCKER_OPTS --rm -it \
-  --user \"$(id -u):$(id -g)\" \
-  --volume \"$PWD:$PWD\" \
-  $config_volumes \
-  $ssh_agent_mount \
-  --workdir \"$PWD\" \
-  \"\${IMAGE_NAME:-alpine/git}:\${IMAGE_TAG:-latest}\" \
-  \"\$@\""
+# shellcheck disable=SC2086
+# shellcheck disable=SC2090
+# As BusyBox does not support Bash arrays, we must use unqoted variables to allow word splitting.
+"$docker_bin" run $DOCKER_OPTS --rm -it --user "$(id -u):$(id -g)" --workdir "$PWD" --volume "$PWD:$PWD" $config_volumes $ssh_agent_mount $container_image "$@"
