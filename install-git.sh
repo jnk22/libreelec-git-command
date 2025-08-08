@@ -149,8 +149,9 @@ install_docker_addon() {
 download_resources() {
   local repo_link=https://github.com/$REPOSITORY/raw/$BRANCH
 
-  wget -q -O "$TMP_DIR/Dockerfile" "$repo_link/Dockerfile"
-  wget -q -O "$TMP_DIR/git" "$repo_link/git"
+  wget -q -O "$TMP_DIR/Dockerfile" "$repo_link/Dockerfile" &
+  wget -q -O "$TMP_DIR/git" "$repo_link/git" &
+  wait
 }
 
 #######################################
