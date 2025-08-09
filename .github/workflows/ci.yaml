@@ -16,11 +16,6 @@ jobs:
   test:
     runs-on: ${{ matrix.os }}
 
-    env:
-      # Must be set to 'false' to prevent ShellSpec errors.
-      DOCKER_INTERACTIVE: false
-      DOCKER_TTY: false
-
     strategy:
       matrix:
         os: [ubuntu-latest]
@@ -67,11 +62,11 @@ jobs:
           cd kcov/build
           sudo make install
 
-      - name: Initialize git container image
-        # Run once before tests to initialize container image.
-        run: ./git
-
       - name: Run ShellSpec tests
+        env:
+          # Must be set to 'false' to prevent ShellSpec errors.
+          DOCKER_INTERACTIVE: false
+          DOCKER_TTY: false
         run: shellspec --shell bash --kcov --kcov-options "--include-pattern=/git"
 
       - name: Upload coverage reports to Codecov

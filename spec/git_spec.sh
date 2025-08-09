@@ -3,6 +3,9 @@
 # Set to PWD to ensure that 'git' is the local git wrapper.
 export PATH=$PWD:$PATH
 
+# Pin image version for tests.
+export IMAGE_TAG=2.49.1
+
 run_git_tag_version() {
   local tag="$1"
   IMAGE_TAG=$tag git --version
@@ -30,8 +33,8 @@ clone_to_absolute_path() {
 }
 
 init_container() {
-  # git
-  echo
+  docker pull alpine/git:2.49.1
+  docker pull alpine/git:2.49.0
 }
 
 Describe 'git wrapper'
