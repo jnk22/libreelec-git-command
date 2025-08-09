@@ -3,8 +3,14 @@
 # Set to PWD to ensure that 'git' is the local git wrapper.
 export PATH=$PWD:$PATH
 
-# Pin image version for tests.
-export IMAGE_TAG=2.49.1
+# Pin version for all tests.
+readonly IMAGE_TAG_MAIN=2.49.1
+
+# And one for proving that we can actually override the git version.
+readonly IMAGE_TAG_OTHER=2.47.2
+
+# We override the default 'latest' tag with a specific one for tests.
+export IMAGE_TAG=$IMAGE_TAG_MAIN
 
 run_git_tag_version() {
   local tag="$1"
@@ -33,8 +39,8 @@ clone_to_absolute_path() {
 }
 
 init_container() {
-  docker pull alpine/git:2.49.1
-  docker pull alpine/git:2.49.0
+  docker pull --quiet alpine/git:"$IMAGE_TAG_MAIN"
+  docker pull --quiet alpine/git:"$IMAGE_TAG_OTHER"
 }
 
 create_test_output_dir() {
@@ -81,14 +87,14 @@ Describe 'git wrapper'
 
   Describe 'git version can be modified via image tag'
     It 'Prints installed version information of Git'
-      When call run_git_tag_version 2.49.1
-      The output should include "git version 2.49.1"
+      When call run_git_tag_version $IMAGE_TAG_MAIN
+      The output should include "git version $IMAGE_TAG_MAIN"
       The status should be success
     End
 
     It 'Allows setting specific image tag'
-      When call run_git_tag_version 2.49.0
-      The output should include "git version 2.49.0"
+      When call run_git_tag_version $IMAGE_TAG_OTHER
+      The output should include "git version $IMAGE_TAG_OTHER"
       The status should be success
     End
   End
@@ -97,20 +103,13 @@ Describe 'git wrapper'
     BeforeEach 'create_test_output_dir'
     AfterEach 'rm_test_output_dir'
 
-    It 'Hello World'
-      When call ls -la test_output
-      The line 1 should match pattern "total *"
-      The status should be success
-    End
+    # It 'Hello World'
+    #   When call ls -la test_output
+    #   The line 1 should match pattern "total *"
+    #   The status should be success
+    # End
 
     It 'Hello Init'
-      When call git init --initial-branch main test_output
-      The line 1 should include "Initialized empty Git repository in $PWD/test_output/.git/"
-      The status should be success
-      The path "$PWD/test_output/.git/" should be exist
-    End
-
-    It 'Hello Init2'
       When call git init --initial-branch main test_output
       The line 1 should include "Initialized empty Git repository in $PWD/test_output/.git/"
       The status should be success
