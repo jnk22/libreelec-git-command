@@ -11,30 +11,6 @@ run_git_tag_version() {
   IMAGE_TAG=$tag git --version
 }
 
-init_repo() {
-  # local working_dir="$1"
-  # cd "$working_dir" || exit 1
-  ls -la
-  rm -rf test_output
-  ls -la
-  mkdir -p -m 777 test_output
-  ls -la test_output
-  git init -b main test_output/repo
-  ls -la
-  # rm -rf test_output
-  # ls -la
-  find .
-  pwd
-  # mkdir -p test_output
-  # ls -la
-  # cd test_output || exit 1
-  # ls -la
-  # git init
-  # ls -la
-  # find .
-  # rm -rf test_output
-}
-
 create_and_clone_into_bare_repo() {
   local working_dir="$1"
   cd "$working_dir" || exit 1
@@ -63,14 +39,10 @@ init_container() {
 
 create_test_output_dir() {
   mkdir -p test_output
-  chmod 777 -R test_output
-  chown "$(id -u):$(id -g)" -R test_output
 }
 
 rm_test_output_dir() {
-  ls -la
   rm -rf test_output
-  ls -la
 }
 
 Describe 'git wrapper'
@@ -135,14 +107,14 @@ Describe 'git wrapper'
       When call git init --initial-branch main test_output
       The line 1 should include "Initialized empty Git repository in $PWD/test_output/.git/"
       The status should be success
-      # The path "$PWD/test_output/.git/" should be exist
+      The path "$PWD/test_output/.git/" should be exist
     End
 
     It 'Hello Init2'
       When call git init --initial-branch main test_output
       The line 1 should include "Initialized empty Git repository in $PWD/test_output/.git/"
       The status should be success
-      # The path "$PWD/test_output/.git/" should be exist
+      The path "$PWD/test_output/.git/" should be exist
     End
 
     # It 'Initializes a new repo'
