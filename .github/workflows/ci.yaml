@@ -16,6 +16,11 @@ jobs:
   test:
     runs-on: ${{ matrix.os }}
 
+    env:
+      # Must be set to 'false' to prevent ShellSpec errors.
+      DOCKER_INTERACTIVE: false
+      DOCKER_TTY: false
+
     strategy:
       matrix:
         os: [ubuntu-latest]
@@ -29,20 +34,42 @@ jobs:
           curl -fsSL https://raw.githubusercontent.com/shellspec/shellspec/0.28.1/install.sh | sh -s 0.28.1 --yes
           echo "$HOME/.local/bin" >> $GITHUB_PATH
 
-      - name: Install dependencies
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y binutils-dev build-essential cmake libssl-dev libcurl4-openssl-dev libelf-dev libstdc++-12-dev zlib1g-dev libdw-dev libiberty-dev
+      # - name: Install dependencies
+      #   run: |
+      #     sudo apt-get update
+      #     sudo apt-get install -y binutils-dev build-essential cmake libssl-dev libcurl4-openssl-dev libelf-dev libstdc++-12-dev zlib1g-dev libdw-dev libiberty-dev
+
+      - uses: awalsh128/cache-apt-pkgs-action@4c82c3ccdc1344ee11e9775dbdbdf43aa8a5614e # v1.5.1
+        with:
+          packages: binutils-dev build-essential cmake libssl-dev libcurl4-openssl-dev libelf-dev libstdc++-12-dev zlib1g-dev libdw-dev libiberty-dev
+          version: 1.0
+
+      - name: Cache kcov build
+        uses: actions/cache@v4
+        id: kcov-cache
+        with:
+          path: |
+            kcov/build
+          key: ${{ runner.os }}-kcov-build-${{ hashFiles('**/kcov/**') }}
 
       - name: Build and install kcov
+        if: steps.kcov-cache.outputs.cache-hit != 'true'
         run: |
-          git clone --depth 1 https://github.com/SimonKagstrom/kcov.git
+          git clone --depth 1 --branch v43 https://github.com/SimonKagstrom/kcov.git
           cd kcov
-          mkdir build
+          mkdir -p build
           cd build
           cmake ..
           make
+
+      - name: Install kcov
+        run: |
+          cd kcov/build
           sudo make install
+
+      - name: Initialize git container image
+        # Run once before tests to initialize container image.
+        run: ./git
 
       - name: Run ShellSpec tests
         run: shellspec --shell bash --kcov --kcov-options "--include-pattern=/git"

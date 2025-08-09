@@ -10,6 +10,11 @@ if [[ ! -x "$docker_bin" ]]; then
   exit 1
 fi
 
+# Normally we would always use -it (interactive + TTY), but for tests we must
+# be able to disable it.
+interactive=$([[ "${DOCKER_INTERACTIVE:-true}" == "true" ]] && echo "--interactive" || echo "")
+tty=$([[ "${DOCKER_TTY:-true}" == "true" ]] && echo "--tty" || echo "")
+
 # Passthrough SSH_AUTH_SOCK if set on host.
 ssh_agent_mount=""
 if [[ -S "$SSH_AUTH_SOCK" ]]; then
@@ -26,5 +31,7 @@ done
 
 # shellcheck disable=SC2086
 # shellcheck disable=SC2090
-# As BusyBox does not support Bash arrays, we must use unqoted variables to allow word splitting.
-"$docker_bin" run $DOCKER_OPTS --rm --user "$(id -u):$(id -g)" --workdir "$PWD" --volume "$PWD:$PWD" $config_volumes $ssh_agent_mount $container_image "$@"
+# As BusyBox does not support Bash arrays, we must use unqoted variables to
+# allow word splitting. Otherwise, volume mounts could be wrong and disabeld
+# 'interactive' and 'tty' would break the command.
+"$docker_bin" run $DOCKER_OPTS --rm $interactive $tty --user "$(id -u):$(id -g)" --workdir "$PWD" --volume "$PWD:$PWD" $config_volumes $ssh_agent_mount $container_image "$@"
