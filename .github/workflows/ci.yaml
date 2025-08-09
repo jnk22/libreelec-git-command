@@ -68,7 +68,7 @@ jobs:
           # Must be set to 'false' to prevent ShellSpec errors.
           DOCKER_INTERACTIVE: false
           DOCKER_TTY: false
-        run: shellspec --shell bash --kcov --kcov-options "--include-pattern=/git"
+        run: shellspec --shell bash --kcov --kcov-options "--include-pattern=git"
         # run: shellspec --shell bash
 
       - name: Upload coverage reports to Codecov

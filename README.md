@@ -1,7 +1,8 @@
 # LibreELEC Git Command
 
-[![pre-commit.ci status](https://results.pre-commit.ci/badge/github/jnk22/libreelec-git-command/main.svg)](https://results.pre-commit.ci/latest/github/jnk22/libreelec-git-command/main)
 [![LibreELEC supported versions](https://img.shields.io/badge/LibreELEC-10%20%7C%2011%20%7C%2012-blue)](https://libreelec.tv)
+[![pre-commit.ci status](https://results.pre-commit.ci/badge/github/jnk22/libreelec-git-command/main.svg)](https://results.pre-commit.ci/latest/github/jnk22/libreelec-git-command/main)
+[![ci](https://github.com/jnk22/libreelec-git-command/actions/workflows/ci.yaml/badge.svg)](https://github.com/jnk22/libreelec-git-command/actions/workflows/ci.yaml)
 
 This repository provides a `git` executable that wraps a Docker container to
 make for [Git](https://git-scm.com/) available on
