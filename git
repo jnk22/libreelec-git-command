@@ -27,4 +27,4 @@ done
 # shellcheck disable=SC2086
 # shellcheck disable=SC2090
 # As BusyBox does not support Bash arrays, we must use unqoted variables to allow word splitting.
-"$docker_bin" run $DOCKER_OPTS --rm -it --user "$(id -u):$(id -g)" --workdir "$PWD" --volume "$PWD:$PWD" $config_volumes $ssh_agent_mount $container_image "$@"
+"$docker_bin" run $DOCKER_OPTS --rm --user "$(id -u):$(id -g)" --workdir "$PWD" --volume "$PWD:$PWD" $config_volumes $ssh_agent_mount $container_image "$@"
