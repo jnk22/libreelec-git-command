@@ -56,6 +56,11 @@ jobs:
           cd build
           cmake ..
           make
+
+      - name: Build and install kcov
+        if: steps.kcov-cache.outputs.cache-hit != 'true'
+        run: |
+          cd kcov/build
           sudo make install
 
       - name: Install ShellSpec
