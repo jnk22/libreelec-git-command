@@ -45,9 +45,9 @@ jobs:
         with:
           path: |
             kcov/build
-          key: ${{ runner.os }}-kcov-build-${{ hashFiles('**/kcov/**') }}
+          key: ${{ runner.os }}-kcov-build-${{ hashFiles('kcov/**') }}
 
-      - name: Build and install kcov
+      - name: Build kcov
         if: steps.kcov-cache.outputs.cache-hit != 'true'
         run: |
           git clone --depth 1 --branch "$KCOV_VERSION" https://github.com/SimonKagstrom/kcov.git
@@ -57,8 +57,7 @@ jobs:
           cmake ..
           make
 
-      - name: Build and install kcov
-        if: steps.kcov-cache.outputs.cache-hit != 'true'
+      - name: Install kcov
         run: |
           cd kcov/build
           sudo make install
