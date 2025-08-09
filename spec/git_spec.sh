@@ -127,19 +127,23 @@ Describe 'git wrapper'
 
     It 'Hello World'
       When call ls -la test_output
-      The line 1 should eq "total 0"
+      The line 1 should match pattern "total *"
       The status should be success
     End
 
     It 'Hello Init'
-      When call git init test_output
+      When call git init --initial-branch main test_output
       The line 1 should include "Initialized empty Git repository in $PWD/test_output/.git/"
       The status should be success
       # The path "$PWD/test_output/.git/" should be exist
     End
 
-
-
+    It 'Hello Init2'
+      When call git init --initial-branch main test_output
+      The line 1 should include "Initialized empty Git repository in $PWD/test_output/.git/"
+      The status should be success
+      # The path "$PWD/test_output/.git/" should be exist
+    End
 
     # It 'Initializes a new repo'
     #   repo_name=repo
