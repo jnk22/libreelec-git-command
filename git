@@ -34,4 +34,15 @@ done
 # As BusyBox does not support Bash arrays, we must use unqoted variables to
 # allow word splitting. Otherwise, volume mounts could be wrong and disabeld
 # 'interactive' and 'tty' would break the command.
-"$docker_bin" run $DOCKER_OPTS --rm $interactive $tty --user "$(id -u):$(id -g)" --workdir "$PWD" --volume "$PWD:$PWD" $config_volumes $ssh_agent_mount $container_image "$@"
+"$docker_bin" run \
+  --rm \
+  $interactive \
+  $tty \
+  --user "$(id -u):$(id -g)" \
+  --workdir "$PWD" \
+  --volume "$PWD:$PWD" \
+  $config_volumes \
+  $ssh_agent_mount \
+  $DOCKER_OPTS \
+  $container_image \
+  "$@"
