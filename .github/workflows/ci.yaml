@@ -42,16 +42,16 @@ jobs:
           path: kcov/build
           key: ${{ runner.os }}-kcov-build-${{ hashFiles('kcov/CMakeLists.txt', 'kcov/src/**') }}
 
-      - name: Install dependencies
+      - name: Install kcov build dependencies
         if: steps.kcov-cache.outputs.cache-hit != 'true'
         uses: awalsh128/cache-apt-pkgs-action@4c82c3ccdc1344ee11e9775dbdbdf43aa8a5614e # v1.5.1
         with:
           packages: binutils-dev build-essential cmake libssl-dev libcurl4-openssl-dev libelf-dev libstdc++-12-dev zlib1g-dev libdw-dev libiberty-dev
           version: 1.0
 
-      - name: CMake Action
+      - name: Build kcov
         if: steps.kcov-cache.outputs.cache-hit != 'true'
-        uses: threeal/cmake-action@v2.1.0
+        uses: threeal/cmake-action@725d1314ccf9ea922805d7e3f9d9bcbca892b406 # v2.1.0
         with:
           source-dir: kcov
 
@@ -68,7 +68,7 @@ jobs:
           # Must be set to 'false' to prevent ShellSpec errors.
           DOCKER_INTERACTIVE: false
           DOCKER_TTY: false
-        run: shellspec --shell bash --kcov --kcov-options "--include-pattern=git"
+        run: shellspec --shell bash --kcov --kcov-options "--include-pattern=/git"
 
       - name: Upload coverage reports to Codecov
         uses: codecov/codecov-action@0565863a31f2c772f9f0395002a31e3f06189574 # v5.4.0
