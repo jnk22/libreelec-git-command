@@ -54,19 +54,20 @@ jobs:
             kcov/build
           key: ${{ runner.os }}-kcov-build-${{ hashFiles('kcov/CMakeLists.txt', 'kcov/src/**') }}
 
-      - name: Build kcov
-        if: steps.kcov-cache.outputs.cache-hit != 'true'
-        run: |
-          cd kcov
-          mkdir -p build
-          cd build
-          cmake ..
-          make
+      - name: CMake Action
+        uses: threeal/cmake-action@v2.1.0
+        with:
+          source-dir: kcov
+
+      # - name: Build kcov
+      #   if: steps.kcov-cache.outputs.cache-hit != 'true'
+      #   run: |
+      #     cmake -S kcov -B kcov/build
+      #     cmake --build kcov/build
 
       - name: Install kcov
-        run: |
-          cd kcov/build
-          sudo make install
+        # Reuse the cache and do not attempt to build again.
+        run: sudo cmake --install kcov/build
 
       - name: Install ShellSpec
         run: |
