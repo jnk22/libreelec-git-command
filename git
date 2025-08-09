@@ -2,6 +2,8 @@
 #
 # Wrapper to run git using a Docker container.
 
+set -euo pipefail
+
 readonly container_image="${IMAGE_NAME:-alpine/git}:${IMAGE_TAG:-latest}"
 
 docker_bin=$(command -v docker || echo "$HOME/.kodi/addons/service.system.docker/bin/docker")
@@ -10,14 +12,14 @@ if [[ ! -x "$docker_bin" ]]; then
   exit 1
 fi
 
-# Normally we would always use -it (interactive + TTY), but for tests we must
-# be able to disable it.
+# Normally we would always use -it (interactive + TTY), but we must be able to
+# disable it for tests in CI environments.
 interactive=$([[ "${DOCKER_INTERACTIVE:-true}" == "true" ]] && echo "--interactive" || echo "")
 tty=$([[ "${DOCKER_TTY:-true}" == "true" ]] && echo "--tty" || echo "")
 
 # Passthrough SSH_AUTH_SOCK if set on host.
 ssh_agent_mount=""
-if [[ -S "$SSH_AUTH_SOCK" ]]; then
+if [[ -S "${SSH_AUTH_SOCK:-}" ]]; then
   ssh_agent_mount="--volume $SSH_AUTH_SOCK:$SSH_AUTH_SOCK --env SSH_AUTH_SOCK=$SSH_AUTH_SOCK"
 fi
 
@@ -30,10 +32,8 @@ for path in .ssh .gitconfig .config/git; do
 done
 
 # shellcheck disable=SC2086
-# shellcheck disable=SC2090
 # As BusyBox does not support Bash arrays, we must use unqoted variables to
-# allow word splitting. Otherwise, volume mounts could be wrong and disabeld
-# 'interactive' and 'tty' would break the command.
+# allow word splitting. Also required for empty 'interactive' and 'tty' options.
 "$docker_bin" run \
   --rm \
   $interactive \
@@ -43,6 +43,6 @@ done
   --volume "$PWD:$PWD" \
   $config_volumes \
   $ssh_agent_mount \
-  $DOCKER_OPTS \
+  ${DOCKER_OPTS:-} \
   $container_image \
   "$@"
