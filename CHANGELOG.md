@@ -25,6 +25,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Use pre-built Docker image [alpine/git](https://hub.docker.com/r/alpine/git)
   instead of manual build
+- Renamed installation script to `install.sh`
 - Set working directory to `$PWD` and mount `$PWD:$PWD` for improved path
   handling and user output
 - Avoid mounting entire `$HOME` directory into the container
