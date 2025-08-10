@@ -1,82 +1,108 @@
-# LibreELEC Git Command
+# Git for LibreELEC via Docker
 
-[![pre-commit.ci status](https://results.pre-commit.ci/badge/github/jnk22/libreelec-git-command/main.svg)](https://results.pre-commit.ci/latest/github/jnk22/libreelec-git-command/main)
 [![LibreELEC supported versions](https://img.shields.io/badge/LibreELEC-10%20%7C%2011%20%7C%2012-blue)](https://libreelec.tv)
+[![pre-commit.ci status](https://results.pre-commit.ci/badge/github/jnk22/libreelec-git-command/main.svg)](https://results.pre-commit.ci/latest/github/jnk22/libreelec-git-command/main)
+[![ci](https://github.com/jnk22/libreelec-git-command/actions/workflows/ci.yaml/badge.svg)](https://github.com/jnk22/libreelec-git-command/actions/workflows/ci.yaml)
 
-This script installs [Git](https://git-scm.com/) within a Docker container on
-[LibreELEC](https://libreelec.tv/) devices, enabling usage of `git` commands.
+This project provides a `git` command wrapper that runs
+[Git](https://git-scm.com/) inside a Docker container, enabling its use on
+[LibreELEC](https://libreelec.tv/) devices.
 
-It is based on a forum post found in the thread
-[Installation of git on Libreelec@LibreELEC Forum](https://forum.libreelec.tv/thread/13874-installation-of-git-on-libreelec/?postID=105152#post105152).
+## Usage
 
-## Installation
-
-The installation script relies on the Kodi service addon **Docker** from _Team
-LibreELEC_ to be installed on your Kodi system.
-If not already installed, this script automatically attempts to install the
-addon.
-
-To install Git, simply execute the following command in your terminal:
+First, install the [LibreELEC Docker addon](https://github.com/LibreELEC/LibreELEC.tv/blob/master/packages/addons/service/docker/package.mk)
+on your LibreELEC device. Then download the [git wrapper](./git), make it
+executable, and run:
 
 ```bash
-curl -sSL https://raw.githubusercontent.com/jnk22/libreelec-git-command/main/install-git.sh | bash
+./git
 ```
 
-You can also access the script directly
-[here](https://raw.githubusercontent.com/jnk22/libreelec-git-command/main/install-git.sh).
+**Recommended:** Use the automated installation script, which installs the
+Docker addon (if not already installed), sets up the Git wrapper, and updates
+your `$PATH`:
 
-After installation, the `git` command will be readily available in your
-terminal!
+```bash
+curl -fsSL https://raw.githubusercontent.com/jnk22/libreelec-git-command/main/install.sh | sh
+```
+
+After installation, you may need to log out and log back in, or run:
+
+```bash
+source ~/.profile
+```
+
+Once complete, the `git` command will be available in your terminal.
+
+> [!NOTE]
+> The initial run may take longer because Docker needs to pull the specified
+> Git container image if it is not already cached locally.
+
+### Additional Parameters
+
+| Parameter       | Description                                                                                | Default                             |
+| --------------- | ------------------------------------------------------------------------------------------ | ----------------------------------- |
+| `IMAGE_NAME`    | Docker image name to use for the Git container.                                            | `alpine/git`                        |
+| `IMAGE_TAG`     | Docker image tag to use.                                                                   | `latest`                            |
+| `DOCKER_OPTS`   | Additional Docker options passed to the `docker run` command.                              | Automatically detected or empty     |
+| `SSH_AUTH_SOCK` | Path to SSH agent socket on the host, mounted inside the container for SSH authentication. | Automatically detected if available |
+
+**Example:**
+
+```bash
+IMAGE_NAME="bitnami/git" IMAGE_TAG="2.50.1" git version
+# Output:
+# git version 2.50.1
+```
 
 ## Tested Devices
 
-The script has been successfully tested on the following devices and LibreELEC
-versions:
+Confirmed working on the following devices and LibreELEC versions:
 
-| Device         | Architecture | LibreELEC Version                          |
-| -------------- | ------------ | ------------------------------------------ |
-| Intel NUC7JYB  | x86_64       | 11.0.6 _(Kodi 20.3)_, 10.0.2 _(Kodi 19.4)_ |
-| Raspberry Pi 3 | arm          | 10.0.2 _(Kodi 19.4)_                       |
-| Raspberry Pi 4 | aarch64      | 11.95.1 _(Kodi 21.0 RC1)_                  |
+| Device         | Architecture | LibreELEC Version                                                |
+| -------------- | ------------ | ---------------------------------------------------------------- |
+| Intel NUC7JYB  | x86_64       | 12.0.2 _(Kodi 21.2)_, 11.0.6 _(Kodi 20.3)_, 10.0.2 _(Kodi 19.4)_ |
+| Raspberry Pi 3 | arm          | 10.0.2 _(Kodi 19.4)_                                             |
+| Raspberry Pi 4 | aarch64      | 11.95.1 _(Kodi 21.0 RC1)_                                        |
 
-_Please note that this list is not exhaustive, and the script should function
-correctly on any device that runs LibreELEC and supports
-[containers](https://wiki.libreelec.tv/installation/docker)._
+_This list is not exhaustive. The wrapper should work on any LibreELEC device
+that supports [Docker containers](https://wiki.libreelec.tv/installation/docker).
+Contributions with additional tested devices are welcome._
 
 ## Development
 
-### Requirements
+To contribute, install the following tools:
 
-- [Bash](https://www.gnu.org/software/bash/)
-- [Docker](https://www.docker.com/)
-- [shellspec](https://github.com/shellspec/shellspec)
+- [Bash](https://www.gnu.org/software/bash/) — shell scripting environment
+- [Docker](https://www.docker.com/) — container runtime
+- [ShellSpec](https://github.com/shellspec/shellspec) — testing framework for
+  shell scripts
+- _(Optional)_ [kcov](https://github.com/SimonKagstrom/kcov) — for generating
+  coverage reports
 
-### Run Tests
+> [!NOTE]
+> Bash arrays cannot be used because LibreELEC uses
+> [BusyBox](https://busybox.net/source.html) for its shell, which does not
+> support arrays.
 
-Running tests requires [shellspec](https://github.com/shellspec/shellspec) to
-be installed on your system.
+### Running Tests
 
-```bash
-shellspec --path ".:$PATH"
-```
-
-**Note:**
-_The `shellspec` path must be set to the directory that contains the `git`
-command wrapper to ensure that the actual wrapper is tested and not a
-system-installed executable of Git._
-
-## Contributing
-
-Contributions are welcomed! Feel free to open an issue or a pull request.
-
-This project utilizes pre-commit to maintain code quality.
-
-To set up pre-commit, install it using your preferred package manager and
-execute the following commands within the repository:
+Run tests from the repository root directory to ensure they execute with the
+correct `git` wrapper:
 
 ```bash
-pre-commit install
-pre-commit install --hook-type commit-msg
+shellspec
 ```
 
-This ensures that your code is linted and formatted before being committed.
+To generate a coverage report:
+
+```bash
+shellspec --kcov --kcov-options "--include-pattern=/git"
+```
+
+## Acknowledgments
+
+This project was initially inspired by the forum post
+[Installation of git on LibreELEC@LibreELEC Forum](https://forum.libreelec.tv/thread/13874-installation-of-git-on-libreelec/?postID=105152#post105152).
+While the forum method builds a custom image, this project uses pre-built
+images for convenience.

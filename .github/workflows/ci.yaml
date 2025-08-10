@@ -1,0 +1,76 @@
+---
+name: ci
+
+permissions:
+  contents: read
+
+# yamllint disable-line rule:truthy
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+  workflow_dispatch:
+
+env:
+  SHELLSPEC_VERSION: 0.28.1
+  KCOV_VERSION: v43
+
+jobs:
+  test:
+    runs-on: ${{ matrix.os }}
+
+    strategy:
+      matrix:
+        os: [ubuntu-latest]
+
+    steps:
+      - name: Check out
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683  # v4.2.2
+
+      - name: Check out kcov
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683  # v4.2.2
+        with:
+          repository: SimonKagstrom/kcov
+          ref: ${{ env.KCOV_VERSION }}
+          path: kcov
+
+      - name: Cache kcov build
+        uses: actions/cache@0400d5f644dc74513175e3cd8d07132dd4860809  # v4.2.4
+        id: kcov-cache
+        with:
+          path: kcov/build
+          key: ${{ runner.os }}-kcov-build-${{ hashFiles('kcov/CMakeLists.txt', 'kcov/src/**') }}
+
+      - name: Install kcov build dependencies
+        if: steps.kcov-cache.outputs.cache-hit != 'true'
+        uses: awalsh128/cache-apt-pkgs-action@4c82c3ccdc1344ee11e9775dbdbdf43aa8a5614e  # v1.5.1
+        with:
+          packages: binutils-dev build-essential cmake libssl-dev libcurl4-openssl-dev libelf-dev libstdc++-12-dev zlib1g-dev libdw-dev libiberty-dev
+          version: 1.0
+
+      - name: Build kcov
+        if: steps.kcov-cache.outputs.cache-hit != 'true'
+        uses: threeal/cmake-action@725d1314ccf9ea922805d7e3f9d9bcbca892b406  # v2.1.0
+        with:
+          source-dir: kcov
+
+      - name: Install kcov
+        run: sudo cmake --install kcov/build
+
+      - name: Install ShellSpec
+        run: |
+          curl -fsSL "https://raw.githubusercontent.com/shellspec/shellspec/$SHELLSPEC_VERSION/install.sh" | sh -s "$SHELLSPEC_VERSION" --yes
+          echo "$HOME/.local/bin" >> "$GITHUB_PATH"
+
+      - name: Run ShellSpec tests
+        env:
+          # Must be set to 'false' to prevent ShellSpec errors.
+          DOCKER_INTERACTIVE: false
+          DOCKER_TTY: false
+        run: shellspec --shell bash --kcov --kcov-options "--include-pattern=/git"
+
+      - name: Upload coverage reports to Codecov
+        uses: codecov/codecov-action@18283e04ce6e62d37312384ff67231eb8fd56d24  # v5.4.3
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}

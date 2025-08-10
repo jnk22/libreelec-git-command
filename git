@@ -1,19 +1,49 @@
 #!/usr/bin/env bash
 #
-# Wrapper script for git commands to run inside the Docker container.
+# Wrapper to run git using a Docker container.
 
-readonly CONTAINER_NAME=${CONTAINER_NAME:-"git-command"}
+set -euo pipefail
 
-# The user might have a custom alias or uses some other docker binary which
-# we do not want to override.
-if ! command -v docker &>/dev/null; then
-  alias docker='~/.kodi/addons/service.system.docker/bin/docker'
+readonly container_image="${IMAGE_NAME:-alpine/git}:${IMAGE_TAG:-latest}"
+
+docker_bin=$(command -v docker || echo "$HOME/.kodi/addons/service.system.docker/bin/docker")
+if [[ ! -x "$docker_bin" ]]; then
+  echo "docker binary not found or not executable" >&2
+  exit 1
 fi
 
-# If available on user's host, we pass SSH_AUTH_SOCK to the container.
-[[ -n "$SSH_AUTH_SOCK" ]] && EXTRA_ARGS="-e SSH_AUTH_SOCK=$SSH_AUTH_SOCK -v $SSH_AUTH_SOCK:$SSH_AUTH_SOCK:ro"
+# Normally we would always use -it (interactive + TTY), but we must be able to
+# disable it for tests in CI environments.
+interactive=$([[ "${DOCKER_INTERACTIVE:-true}" == "true" ]] && echo "--interactive" || echo "")
+tty=$([[ "${DOCKER_TTY:-true}" == "true" ]] && echo "--tty" || echo "")
 
-# We also pass the user id and group id to the container to ensure that the user
-# has the same permissions inside the container as outside.
+# Passthrough SSH_AUTH_SOCK if set on host.
+ssh_agent_mount=""
+if [[ -S "${SSH_AUTH_SOCK:-}" ]]; then
+  ssh_agent_mount="--volume $SSH_AUTH_SOCK:$SSH_AUTH_SOCK --env SSH_AUTH_SOCK=$SSH_AUTH_SOCK"
+fi
+
+# Mount additional SSH and Git configurations if available on host.
+config_volumes=""
+for path in .ssh .gitconfig .config/git; do
+  if [[ -f "$path" || -d "$path" ]]; then
+    config_volumes="$config_volumes --volume $HOME/$path:/$path:ro"
+  fi
+done
+
 # shellcheck disable=SC2086
-docker run -it --rm --user "$(id -u):$(id -g)" -v "$HOME":/root -v "$PWD":/git $EXTRA_ARGS "$CONTAINER_NAME" "$@"
+# As BusyBox does not support Bash arrays, we must use unqoted variables to
+# allow word splitting. Also required for empty 'interactive' and 'tty' options.
+"$docker_bin" run \
+  --rm \
+  $interactive \
+  $tty \
+  --user "$(id -u):$(id -g)" \
+  --workdir "$PWD" \
+  --volume "$PWD:$PWD" \
+  --entrypoint "git" \
+  $config_volumes \
+  $ssh_agent_mount \
+  ${DOCKER_OPTS:-} \
+  $container_image \
+  "$@"
