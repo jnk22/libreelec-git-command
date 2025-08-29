@@ -26,8 +26,9 @@ fi
 # Mount additional SSH and Git configurations if available on host.
 config_volumes=""
 for path in .ssh .gitconfig .config/git; do
-  if [[ -f "$path" || -d "$path" ]]; then
-    config_volumes="$config_volumes --volume $HOME/$path:/$path:ro"
+  home_path="$HOME/$path"
+  if [[ -f "$home_path" || -d "$home_path" ]]; then
+    config_volumes="$config_volumes --volume $home_path:/root/$path:ro"
   fi
 done
 
