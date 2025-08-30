@@ -1,5 +1,6 @@
 # Git for LibreELEC via Docker
 
+[![version](https://img.shields.io/github/v/tag/jnk22/libreelec-git-command?sort=semver)](https://github.com/jnk22/libreelec-git-command/releases)
 [![LibreELEC supported versions](https://img.shields.io/badge/LibreELEC-10%20%7C%2011%20%7C%2012-blue)](https://libreelec.tv)
 [![pre-commit.ci status](https://results.pre-commit.ci/badge/github/jnk22/libreelec-git-command/main.svg)](https://results.pre-commit.ci/latest/github/jnk22/libreelec-git-command/main)
 [![ci](https://github.com/jnk22/libreelec-git-command/actions/workflows/ci.yaml/badge.svg)](https://github.com/jnk22/libreelec-git-command/actions/workflows/ci.yaml)
@@ -98,6 +99,28 @@ To generate a coverage report:
 
 ```bash
 shellspec --kcov --kcov-options "--include-pattern=/git"
+```
+
+### Versioning
+
+This repository uses [Bump My Version](https://pypi.org/project/bump-my-version/)
+to manage version numbers and changelog updates.
+
+- Version numbers follow [Semantic Versioning](https://semver.org/).
+- Changelog entries are maintained in `CHANGELOG.md` following the [Keep a Changelog](https://keepachangelog.com/en/1.1.0/)
+  format.
+- To bump a version, run:
+
+```bash
+bump-my-version bump minor  # or major/patch
+```
+
+After bumping a release, prepare the next development
+cycle by adding a fresh [Unreleased] section and link.
+This script will also commit the update automatically:
+
+```bash
+./scripts/prepare-next-version.sh
 ```
 
 ## Acknowledgments
