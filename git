@@ -4,6 +4,9 @@
 
 set -euo pipefail
 
+readonly CONTAINER_HOME="/root"
+readonly USER_CONFIG_PATHS=".gitconfig .config/git/ .ssh/"
+
 readonly container_image="${IMAGE_NAME:-alpine/git}:${IMAGE_TAG:-latest}"
 
 docker_bin=$(command -v docker || echo "$HOME/.kodi/addons/service.system.docker/bin/docker")
@@ -25,10 +28,10 @@ fi
 
 # Mount additional SSH and Git configurations if available on host.
 config_volumes=""
-for path in .ssh .gitconfig .config/git; do
+for path in $USER_CONFIG_PATHS; do
   home_path="$HOME/$path"
   if [[ -f "$home_path" || -d "$home_path" ]]; then
-    config_volumes="$config_volumes --volume $home_path:/root/$path:ro"
+    config_volumes="$config_volumes --volume $home_path:$CONTAINER_HOME/$path:ro"
   fi
 done
 
