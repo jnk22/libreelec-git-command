@@ -9,7 +9,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-...
+### Added
+
+- Mount `~/.git-credentials` from host if available
 
 ## [0.3.0] - 2025-08-30
 
