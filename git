@@ -5,7 +5,7 @@
 set -euo pipefail
 
 readonly CONTAINER_HOME="/root"
-readonly USER_CONFIG_PATHS=".gitconfig .config/git/ .ssh/"
+readonly USER_CONFIG_PATHS=".gitconfig .git-credentials .config/git/ .ssh/"
 
 readonly container_image="${IMAGE_NAME:-alpine/git}:${IMAGE_TAG:-latest}"
 
