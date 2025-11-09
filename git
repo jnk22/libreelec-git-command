@@ -36,7 +36,7 @@ for path in $USER_CONFIG_PATHS; do
 done
 
 # shellcheck disable=SC2086
-# As BusyBox does not support Bash arrays, we must use unqoted variables to
+# As BusyBox does not support Bash arrays, we must use unquoted variables to
 # allow word splitting. Also required for empty 'interactive' and 'tty' options.
 "$docker_bin" run \
   --rm \
