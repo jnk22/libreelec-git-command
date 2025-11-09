@@ -107,8 +107,8 @@ This repository uses [Bump My Version](https://pypi.org/project/bump-my-version/
 to manage version numbers and changelog updates.
 
 - Version numbers follow [Semantic Versioning](https://semver.org/).
-- Changelog entries are maintained in `CHANGELOG.md` following the [Keep a Changelog](https://keepachangelog.com/en/1.1.0/)
-  format.
+- Changelog entries are maintained in `CHANGELOG.md` following the
+  [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) format.
 - To bump a version, run:
 
 ```bash
@@ -116,7 +116,7 @@ bump-my-version bump minor  # or major/patch
 ```
 
 After bumping a release, prepare the next development
-cycle by adding a fresh [Unreleased] section and link.
+cycle by adding a fresh `[Unreleased]` section and link.
 This script will also commit the update automatically:
 
 ```bash

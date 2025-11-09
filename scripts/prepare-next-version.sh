@@ -23,25 +23,13 @@ grep -Fq "$UNRELEASED_SECTION" "$CHANGELOG_FILE" && error "[Unreleased] section 
 
 current_version=$(grep -Po '^\s*current_version\s*=\s*"\K[^"]+' "$BUMP_VERSION_FILE")
 unreleased_section_full="$UNRELEASED_SECTION\n\n...\n"
-unreleased_link="[Unreleased]: $REPO_URL/compare/v${current_version}...HEAD"
+unreleased_link="[unreleased]: $REPO_URL/compare/v${current_version}...HEAD"
 
-tmp_file=$(mktemp) || error "Failed to create temporary file"
-
-# Prepend [Unreleased] before first ## header.
-awk -v section="$unreleased_section_full" '
-    BEGIN { inserted = 0 }
-    /^## / && !inserted { print section; inserted = 1 }
+awk -v section="$unreleased_section_full" -v link="$unreleased_link" '
+    !inserted && /^## / { print section; inserted=1 }
     { print }
-' "$CHANGELOG_FILE" >"$tmp_file"
-
-# Add comparison link above current version link.
-awk -v link="$unreleased_link" -v version="$current_version" '
-    BEGIN { inserted = 0 }
-    $0 ~ "\\[" version "\\]:" && !inserted { print link; inserted = 1 }
-    { print }
-' "$tmp_file" >"$CHANGELOG_FILE"
-
-rm -f "$tmp_file"
+    END { print link }
+' "$CHANGELOG_FILE" >"$CHANGELOG_FILE.tmp" && mv "$CHANGELOG_FILE.tmp" "$CHANGELOG_FILE"
 
 git add "$CHANGELOG_FILE"
 git commit --message "$COMMIT_MESSAGE"
