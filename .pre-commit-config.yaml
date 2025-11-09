@@ -1,4 +1,6 @@
 ---
+default_install_hook_types: [pre-commit, commit-msg]
+
 repos:
   - repo: https://github.com/pre-commit/pre-commit-hooks
     rev: v6.0.0
@@ -15,21 +17,27 @@ repos:
       - id: fix-byte-order-marker
       - id: trailing-whitespace
 
+  # EditorConfig
   - repo: https://github.com/editorconfig-checker/editorconfig-checker.python
     rev: 3.4.1
     hooks:
       - id: editorconfig-checker
 
+  # YAML
+  - repo: https://github.com/google/yamlfmt
+    rev: v0.20.0
+    hooks:
+      - id: yamlfmt
   - repo: https://github.com/adrienverge/yamllint
     rev: v1.37.1
     hooks:
       - id: yamllint
 
+  # Shell/Bash
   - repo: https://github.com/shellcheck-py/shellcheck-py
     rev: v0.11.0.1
     hooks:
       - id: shellcheck
-
   - repo: https://github.com/scop/pre-commit-shfmt
     rev: v3.12.0-2
     hooks:
@@ -37,31 +45,56 @@ repos:
         args: ["-w", "-i", "2", "-ci"]
         # Test specs have a specific format that should not be changed.
         exclude: '^spec/.*_spec\.sh$'
-
   - repo: https://github.com/lovesegfault/beautysh
     rev: v6.4.1
     hooks:
       - id: beautysh
         args: ["-i", "2"]
-        # Tempoarily fix to Python 3.11 version, until Python 3.12 support
-        # is available: https://github.com/lovesegfault/beautysh/issues/248
-        language_version: "3.11"
         # Test specs have a specific format that should not be changed.
         exclude: '^spec/.*_spec\.sh$'
 
-  - repo: https://github.com/igorshubovych/markdownlint-cli
-    rev: v0.45.0
+  # Markdown
+  - repo: https://github.com/hukkin/mdformat
+    rev: 1.0.0
     hooks:
-      - id: markdownlint-fix
+      - id: mdformat
+        additional_dependencies: [mdformat-gfm]
+  - repo: https://github.com/rvben/rumdl-pre-commit
+    rev: v0.0.173
+    hooks:
+      - id: rumdl
+        args: [--fix]
 
+  # GitHub Actions
   - repo: https://github.com/rhysd/actionlint
     rev: v1.7.8
     hooks:
       - id: actionlint
+  - repo: https://github.com/zizmorcore/zizmor-pre-commit
+    rev: v1.16.3
+    hooks:
+      - id: zizmor
 
+  # Spelling
+  - repo: https://github.com/crate-ci/typos
+    rev: v1.39.0
+    hooks:
+      - id: typos
+
+  # Security
+  - repo: https://github.com/Yelp/detect-secrets
+    rev: v1.5.0
+    hooks:
+      - id: detect-secrets
+  - repo: https://github.com/gitleaks/gitleaks
+    rev: v8.29.0
+    hooks:
+      - id: gitleaks
+
+  # Git Commits
   - repo: https://github.com/alessandrojcm/commitlint-pre-commit-hook
     rev: v9.23.0
     hooks:
       - id: commitlint
-        stages: [commit-msg]
+        stages: ["commit-msg"]
         additional_dependencies: ["@commitlint/config-conventional"]
