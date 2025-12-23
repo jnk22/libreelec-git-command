@@ -45,6 +45,16 @@ pull_container_images() {
   echo Done.
 }
 
+create_git_config() {
+  local gitconfig_path="$1"
+  mkdir -p "$(dirname "$gitconfig_path")"
+  cat > "$gitconfig_path" <<'EOF'
+[user]
+    name = Test User
+    email = test@example.com
+EOF
+}
+
 create_test_output_dir() {
   mkdir -p test_output
 }
@@ -83,6 +93,51 @@ Describe 'git wrapper'
       The line 1 should include "usage: git"
       The status should be success
     End
+  End
+
+  Describe "git config get"
+    tmpdir_home=$(mktemp -d)
+    create_git_config "$tmpdir_home/.gitconfig"
+
+    # Overwrite user's home to use a custom Git config file
+    export DOCKER_OPTS="-e HOME=$tmpdir_home -v $tmpdir_home:$tmpdir_home"
+
+    It "Prints the configured user name"
+      When call git config --global user.name
+      The status should be success
+      The line 1 should include "Test User"
+    End
+
+    It "Prints the configured user email"
+      When call git config --global user.email
+      The status should be success
+      The line 1 should include "test@example.com"
+    End
+
+    rm -rf "$tmpdir_home"
+  End
+
+  Describe "git config set"
+    tmpdir_home=$(mktemp -d)
+    tmpdir_gitconfig="$tmpdir_home/.gitconfig"
+    create_git_config "$tmpdir_gitconfig"
+
+    # Overwrite user's home to use a custom Git config file
+    export DOCKER_OPTS="-e HOME=$tmpdir_home -v $tmpdir_home:$tmpdir_home"
+
+    It "Sets the configured user name and email"
+      When call git config --global user.name "Alice"
+      The status should be success
+      The contents of file "$tmpdir_gitconfig" should include "name = Alice"
+    End
+
+    It "Prints the configured user name and email"
+      When call git config --global user.email "alice@example.com"
+      The status should be success
+      The contents of file "$tmpdir_gitconfig" should include "email = alice@example.com"
+    End
+
+    rm -rf "$tmpdir_home"
   End
 
   Describe 'git version can be modified via image tag'

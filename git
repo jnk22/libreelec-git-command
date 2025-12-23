@@ -4,7 +4,6 @@
 
 set -euo pipefail
 
-readonly CONTAINER_HOME="/root"
 readonly USER_CONFIG_PATHS=".gitconfig .git-credentials .config/git/ .ssh/"
 
 readonly container_image="${IMAGE_NAME:-alpine/git}:${IMAGE_TAG:-latest}"
@@ -31,7 +30,7 @@ config_volumes=""
 for path in $USER_CONFIG_PATHS; do
   home_path="$HOME/$path"
   if [[ -f "$home_path" || -d "$home_path" ]]; then
-    config_volumes="$config_volumes --volume $home_path:$CONTAINER_HOME/$path:ro"
+    config_volumes="$config_volumes --volume $home_path:$home_path:rw"
   fi
 done
 
@@ -42,6 +41,7 @@ done
   --rm \
   $interactive \
   $tty \
+  --env HOME=$HOME \
   --user "$(id -u):$(id -g)" \
   --workdir "$PWD" \
   --volume "$PWD:$PWD" \
