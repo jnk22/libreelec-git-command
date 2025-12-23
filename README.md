@@ -2,8 +2,8 @@
 
 [![version](https://img.shields.io/github/v/tag/jnk22/libreelec-git-command?sort=semver)](https://github.com/jnk22/libreelec-git-command/releases)
 [![LibreELEC supported versions](https://img.shields.io/badge/LibreELEC-10%20%7C%2011%20%7C%2012-blue)](https://libreelec.tv)
-[![pre-commit.ci status](https://results.pre-commit.ci/badge/github/jnk22/libreelec-git-command/main.svg)](https://results.pre-commit.ci/latest/github/jnk22/libreelec-git-command/main)
-[![ci](https://github.com/jnk22/libreelec-git-command/actions/workflows/ci.yaml/badge.svg)](https://github.com/jnk22/libreelec-git-command/actions/workflows/ci.yaml)
+[![Tests](https://github.com/jnk22/libreelec-git-command/actions/workflows/tests.yml/badge.svg)](https://github.com/jnk22/libreelec-git-command/actions/workflows/tests.yml)
+[![Prek checks](https://github.com/jnk22/libreelec-git-command/actions/workflows/prek-checks.yml/badge.svg)](https://github.com/jnk22/libreelec-git-command/actions/workflows/prek-checks.yml)
 
 This project provides a `git` command wrapper that runs
 [Git](https://git-scm.com/) inside a Docker container, enabling its use on
