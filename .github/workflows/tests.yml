@@ -1,6 +1,6 @@
 # yamllint disable rule:line-length
 ---
-name: ci
+name: Tests
 
 permissions:
   contents: read
