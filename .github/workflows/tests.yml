@@ -68,10 +68,7 @@ jobs:
           echo "$HOME/.local/bin" >> "$GITHUB_PATH"
 
       - name: Run ShellSpec tests
-        env:
-          # Must be set to 'false' to prevent ShellSpec errors.
-          DOCKER_OPTS: "--interactive=false --tty=false"
-        run: shellspec --shell bash --kcov --kcov-options "--include-pattern=/git"
+        run: DOCKER_OPTS="--interactive=false --tty=false" shellspec --shell bash --kcov --kcov-options "--include-pattern=/git"
 
       - name: Upload coverage reports to Codecov
         uses: codecov/codecov-action@18283e04ce6e62d37312384ff67231eb8fd56d24  # v5.4.3
