@@ -70,8 +70,7 @@ jobs:
       - name: Run ShellSpec tests
         env:
           # Must be set to 'false' to prevent ShellSpec errors.
-          DOCKER_INTERACTIVE: false
-          DOCKER_TTY: false
+          DOCKER_OPTS: "--interactive=false --tty=false"
         run: shellspec --shell bash --kcov --kcov-options "--include-pattern=/git"
 
       - name: Upload coverage reports to Codecov

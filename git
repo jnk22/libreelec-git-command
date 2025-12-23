@@ -14,11 +14,6 @@ if [[ ! -x "$docker_bin" ]]; then
   exit 1
 fi
 
-# Normally we would always use -it (interactive + TTY), but we must be able to
-# disable it for tests in CI environments.
-interactive=$([[ "${DOCKER_INTERACTIVE:-true}" == "true" ]] && echo "--interactive" || echo "")
-tty=$([[ "${DOCKER_TTY:-true}" == "true" ]] && echo "--tty" || echo "")
-
 # Passthrough SSH_AUTH_SOCK if set on host.
 ssh_agent_mount=""
 if [[ -S "${SSH_AUTH_SOCK:-}" ]]; then
@@ -34,13 +29,12 @@ for path in $USER_CONFIG_PATHS; do
   fi
 done
 
+# Use unquoted variables to allow word splitting in BusyBox.
 # shellcheck disable=SC2086
-# As BusyBox does not support Bash arrays, we must use unquoted variables to
-# allow word splitting. Also required for empty 'interactive' and 'tty' options.
 "$docker_bin" run \
   --rm \
-  $interactive \
-  $tty \
+  --interactive \
+  --tty \
   --env HOME=$HOME \
   --user "$(id -u):$(id -g)" \
   --workdir "$PWD" \
