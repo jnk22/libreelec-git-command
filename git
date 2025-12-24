@@ -25,6 +25,16 @@ if [[ -S "${SSH_AUTH_SOCK:-}" ]]; then
   ssh_agent_mount="--volume $SSH_AUTH_SOCK:$SSH_AUTH_SOCK --env SSH_AUTH_SOCK=$SSH_AUTH_SOCK"
 fi
 
+# Passthrough all environment variables starting with 'GIT_'.
+git_envs=""
+while IFS='=' read -r name _; do
+  case "$name" in
+    GIT_*)
+      git_envs="$git_envs --env $name"
+      ;;
+  esac
+done < <(env)
+
 # Mount additional SSH and Git configurations if available on host.
 config_volumes=""
 for path in $USER_CONFIG_PATHS; do
@@ -47,6 +57,7 @@ done
   --volume "$PWD:$PWD" \
   --entrypoint "git" \
   $config_volumes \
+  $git_envs \
   $ssh_agent_mount \
   ${DOCKER_OPTS:-} \
   $container_image \

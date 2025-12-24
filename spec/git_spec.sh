@@ -154,6 +154,15 @@ Describe 'git wrapper'
     End
   End
 
+  Describe 'GIT_ environment passthrough'
+    It 'Passes GIT_TRACE into the container'
+      When run env GIT_TRACE=1 git --version
+      The status should be success
+      The line 1 should include 'trace: built-in: git version'
+      The line 2 should start with 'git version'
+    End
+  End
+
   Describe 'git init'
     BeforeEach 'create_test_output_dir'
     AfterEach 'rm_test_output_dir'
