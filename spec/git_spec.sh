@@ -48,7 +48,7 @@ pull_container_images() {
 create_git_config() {
   local gitconfig_path="$1"
   mkdir -p "$(dirname "$gitconfig_path")"
-  cat > "$gitconfig_path" <<'EOF'
+  cat >"$gitconfig_path" <<'EOF'
 [user]
     name = Test User
     email = test@example.com
