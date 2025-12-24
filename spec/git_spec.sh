@@ -162,7 +162,7 @@ Describe 'git wrapper'
       When call git init --initial-branch main test_output
       The line 1 should include "Initialized empty Git repository in $PWD/test_output/.git/"
       The status should be success
-      The path "$PWD/test_output/.git/" should be exist
+      The path "$PWD/test_output/.git/" should exist
     End
   End
 
@@ -180,7 +180,7 @@ Describe 'git wrapper'
       The line 2 should include "Cloning into 'repo'..."
       The line 3 should include "warning: You appear to have cloned an empty repository."
       The line 4 should include "done."
-      The path RepoPath should be exist
+      The path RepoPath should exist
       The status should be success
       rm -rf "$tmpdir_bare"
     End
@@ -192,7 +192,7 @@ Describe 'git wrapper'
       Path RepoPath="$tmpdir_relative/$repo_name"
       The line 1 should include "Cloning into '$repo_name'..."
       The line 2 should include "done."
-      The path RepoPath should be exist
+      The path RepoPath should exist
       The status should be success
       rm -rf "$tmpdir_relative"
     End
@@ -204,7 +204,7 @@ Describe 'git wrapper'
       When call clone_to_absolute_path "$tmpdir_absolute"
       The line 1 should include "Cloning into '$tmpdir_absolute/$repo_name'..."
       The line 2 should include "done."
-      The path RepoPath should be exist
+      The path RepoPath should exist
       The status should be success
       rm -rf "$tmpdir_absolute"
     End
